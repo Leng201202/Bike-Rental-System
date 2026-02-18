@@ -1,0 +1,19 @@
+# Render Blueprint — Infrastructure as Code
+# https://docs.render.com/infrastructure-as-code
+
+services:
+  # ── Backend: Spring Boot API ──
+  - type: web
+    name: bike-rental-backend
+    runtime: docker
+    repo: https://github.com/Leng201202/Bike-Rental-System
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    branch: main
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SERVER_PORT
+        value: "8080"
