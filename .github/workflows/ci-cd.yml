@@ -1,14 +1,10 @@
-name: CI/CD - Deploy to Vercel & Render
+name: CI - Build & Test
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
   # ──────────────────────────────────────────────
@@ -61,82 +57,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-  # ──────────────────────────────────────────────
-  # Job 3: Deploy Frontend to Vercel (prod)
-  # ──────────────────────────────────────────────
-  deploy-frontend:
-    name: Deploy Frontend to Vercel
-    runs-on: ubuntu-latest
-    needs: [backend-build, frontend-build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Deploy to Vercel Production
-        working-directory: frontend
-        run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
-
-  # ──────────────────────────────────────────────
-  # Job 4: Deploy Preview (pull requests)
-  # ──────────────────────────────────────────────
-  deploy-preview:
-    name: Deploy Preview to Vercel
-    runs-on: ubuntu-latest
-    needs: [backend-build, frontend-build]
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Deploy Preview to Vercel
-        id: deploy
-        working-directory: frontend
-        run: |
-          url=$(vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }})
-          echo "preview_url=$url" >> $GITHUB_OUTPUT
-
-      - name: Comment Preview URL on PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `🚀 **Preview deployed!**\n\n${{ steps.deploy.outputs.preview_url }}`
-            })
-
-  # ──────────────────────────────────────────────
-  # Job 5: Deploy Backend to Render (prod)
-  # ──────────────────────────────────────────────
-  deploy-backend:
-    name: Deploy Backend to Render
-    runs-on: ubuntu-latest
-    needs: [backend-build, frontend-build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Trigger Render Deploy
-        run: |
-          curl -s "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
-          echo "✅ Render deploy triggered"
