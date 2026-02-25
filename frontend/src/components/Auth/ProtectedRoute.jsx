@@ -20,8 +20,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    if (!hasAgreedToTerms && location.pathname !== '/permissions') {
-        // Force permissions agreement before accessing role-specific routes
+    if (!hasAgreedToTerms && user?.role !== 'ADMIN' && location.pathname !== '/permissions') {
+        // Force permissions agreement for non-admins before accessing role-specific routes
         return <Navigate to="/permissions" replace />;
     }
 

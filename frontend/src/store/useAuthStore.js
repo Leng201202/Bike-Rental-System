@@ -18,13 +18,19 @@ const useAuthStore = create((set) => ({
         set({ loading: true, error: null });
         try {
             // Mock Login Logic for Testing
-            // Differentiate role based on username for easy testing
             const userLower = (credentials.username || '').toLowerCase();
             const role = userLower.includes('admin') ? 'ADMIN' : 'RIDER';
 
             const mockUser = {
                 username: credentials.username || 'demo_user',
-                role: role
+                fullName: credentials.username === 'admin' ? 'System Administrator' : 'Alice Smith',
+                email: credentials.username === 'admin' ? 'admin@bikerental.com' : 'alice@uni.edu',
+                campusId: 'ST-48293',
+                phoneNumber: credentials.phoneNumber || '+66 81-234-5678',
+                role: role,
+                avatar: null,
+                memberSince: 'February 2026',
+                debt: credentials.username === 'admin' ? 0 : 45.50 // Default mock debt for riders
             };
             const mockToken = `mock-jwt-token-${role}`;
 
@@ -41,6 +47,38 @@ const useAuthStore = create((set) => ({
                 error: 'Login failed',
                 loading: false
             });
+            return false;
+        }
+    },
+
+    updateProfile: async (profileData) => {
+        set({ loading: true, error: null });
+        try {
+            // Simulate API Latency
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            set(state => ({
+                user: { ...state.user, ...profileData },
+                loading: false
+            }));
+            return true;
+        } catch (error) {
+            set({ error: 'Failed to update profile', loading: false });
+            return false;
+        }
+    },
+
+    payDebt: async (amount) => {
+        set({ loading: true, error: null });
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate payment processing
+            set(state => ({
+                user: { ...state.user, debt: Math.max(0, state.user.debt - amount) },
+                loading: false
+            }));
+            return true;
+        } catch (error) {
+            set({ error: 'Payment failed', loading: false });
             return false;
         }
     },

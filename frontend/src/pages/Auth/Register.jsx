@@ -10,6 +10,7 @@ function Register() {
         fullName: '',
         username: '',
         email: '',
+        phoneNumber: '',
         password: '',
         confirmPassword: '',
         role: 'RIDER'
@@ -59,7 +60,10 @@ function Register() {
                             <Input label="Username" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe123" required />
                         </div>
 
-                        <Input label="Email Address" type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@university.edu" required />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Input label="Email Address" type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@university.edu" required />
+                            <Input label="Phone Number" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+66 XX-XXX-XXXX" required />
+                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <Input label="Password" type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required />

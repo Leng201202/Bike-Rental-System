@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import useBikeStore from '../../store/useBikeStore';
 import BikeCard from '../../components/Bikes/BikeCard';
 import BikeFilterBar from '../../components/Bikes/BikeFilterBar';
+import RentalModal from '../../components/Bikes/RentalModal';
 import { showToast } from '../../components/UI/PremiumToast';
 
 const BikesPage = ({ isCompact = false }) => {
-    const { bikes, fetchBikes, loading } = useBikeStore();
+    const { bikes, fetchBikes, rentBike, loading } = useBikeStore();
     const [filter, setFilter] = useState('ALL');
+    const [selectedBike, setSelectedBike] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         fetchBikes();
@@ -16,9 +19,19 @@ const BikesPage = ({ isCompact = false }) => {
         ? bikes
         : bikes.filter(bike => bike.type === filter);
 
-    const handleRent = (bike) => {
-        showToast.success(`Starting rental for ${bike.name}...`);
-        // Logic for rental would go here
+    const handleRentClick = (bike) => {
+        setSelectedBike(bike);
+        setIsModalOpen(true);
+    };
+
+    const handleConfirmRental = async (method) => {
+        const success = await rentBike(selectedBike.id, method);
+        if (success) {
+            showToast.success(`Started rental for ${selectedBike.name}!`);
+            setIsModalOpen(false);
+        } else {
+            showToast.error(`Failed to start rental for ${selectedBike.name}.`);
+        }
     };
 
     return (
@@ -46,10 +59,17 @@ const BikesPage = ({ isCompact = false }) => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {filteredBikes.map((bike) => (
-                        <BikeCard key={bike.id} bike={bike} onRent={handleRent} />
+                        <BikeCard key={bike.id} bike={bike} onRent={() => handleRentClick(bike)} />
                     ))}
                 </div>
             )}
+
+            <RentalModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                bike={selectedBike}
+                onConfirm={handleConfirmRental}
+            />
         </div>
     );
 };

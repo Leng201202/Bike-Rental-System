@@ -26,8 +26,8 @@ const BikeCard = ({ bike, onRent, isOwner = false }) => {
                         {bike.name}
                     </h3>
                     <div className="text-right">
-                        <div className="text-2xl font-black text-white">${bike.pricePerHour}</div>
-                        <div className="text-[10px] font-bold text-gray-500 uppercase">per hour</div>
+                        <div className="text-xl font-black text-white">฿{bike.pricePerHour}/hr</div>
+                        <div className="text-sm font-bold text-blue-400">฿{bike.pricePerKm || '2.0'}/km</div>
                     </div>
                 </div>
                 <p className="text-gray-400 text-sm leading-relaxed mb-8 font-medium italic line-clamp-2">

@@ -9,6 +9,7 @@ const Input = ({
     placeholder,
     required = false,
     error,
+    readOnly = false,
     className = ""
 }) => {
     return (
@@ -25,6 +26,7 @@ const Input = ({
                 onChange={onChange}
                 placeholder={placeholder}
                 required={required}
+                readOnly={readOnly}
                 className={`
                     w-full px-5 py-4 bg-gray-900/50 border rounded-2xl outline-none transition-all placeholder:text-gray-600 font-medium
                     ${error ? 'border-red-500/50 focus:ring-red-500/40' : 'border-gray-700/50 focus:ring-blue-500/40 focus:border-blue-500 focus:ring-2'}

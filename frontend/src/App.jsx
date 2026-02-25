@@ -1,17 +1,26 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
 import Navbar from './components/Layout/Navbar';
-
-// Page Imports
-import HomePage from './pages/HomePage';
-import BikesPage from './pages/User/BikesPage';
-import UserDashboard from './pages/User/UserDashboard';
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
-import Permissions from './pages/Auth/Permissions';
-
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
+
+// Lazy loaded page components
+const HomePage = lazy(() => import('./pages/HomePage'));
+const BikesPage = lazy(() => import('./pages/User/BikesPage'));
+const UserDashboard = lazy(() => import('./pages/User/UserDashboard'));
+const PaymentPage = lazy(() => import('./pages/User/PaymentPage'));
+const LiveTracking = lazy(() => import('./pages/User/LiveTracking'));
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
+const Login = lazy(() => import('./pages/Auth/Login'));
+const Register = lazy(() => import('./pages/Auth/Register'));
+const Permissions = lazy(() => import('./pages/Auth/Permissions'));
+
+// Loading Fallback Component
+const LoadingFallback = () => (
+  <div className="flex h-screen items-center justify-center bg-[#242424]">
+    <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+  </div>
+);
 
 function App() {
   return (
@@ -23,34 +32,52 @@ function App() {
 
         {/* Global Page Layout */}
         <main>
-          <Routes>
-            {/* Core Routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/bikes" element={<BikesPage />} />
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              {/* Core Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/bikes" element={<BikesPage />} />
 
-            {/* Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/permissions" element={<Permissions />} />
+              {/* Auth Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/permissions" element={<Permissions />} />
 
-            {/* Dashboard Routes */}
-            <Route
-              path="/rider"
-              element={
-                <ProtectedRoute allowedRoles={['RIDER']}>
-                  <UserDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+              {/* Dashboard Routes */}
+              <Route
+                path="/rider"
+                element={
+                  <ProtectedRoute allowedRoles={['RIDER']}>
+                    <UserDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payment"
+                element={
+                  <ProtectedRoute allowedRoles={['RIDER']}>
+                    <PaymentPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/map"
+                element={
+                  <ProtectedRoute allowedRoles={['RIDER']}>
+                    <LiveTracking />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Suspense>
         </main>
       </div>
     </BrowserRouter>
