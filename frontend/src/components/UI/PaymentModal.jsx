@@ -36,7 +36,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, title = "Complete Pa
 
     return (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-[#121212] border border-gray-800 w-full max-w-md rounded-[3rem] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300 overflow-hidden">
+            <div className="bg-[#121212] border border-gray-800 w-full max-w-md rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-10 relative animate-in zoom-in-95 duration-300 overflow-hidden">
                 {/* Decorative background */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
 
@@ -54,7 +54,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, title = "Complete Pa
                         <div className="mb-6 inline-block px-4 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-[10px] font-black uppercase tracking-widest text-blue-400">
                             Secure PromptPay Terminal
                         </div>
-                        <h2 className="text-3xl font-black mb-2 uppercase tracking-tight text-white">{title}</h2>
+                        <h2 className="text-2xl md:text-3xl font-black mb-2 uppercase tracking-tight text-white">{title}</h2>
                         <div className="text-4xl font-black text-white mb-8">
                             <span className="text-xl text-gray-500 mr-1 font-bold">฿</span>
                             {amount.toFixed(2)}
@@ -62,7 +62,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, title = "Complete Pa
 
                         {/* QR Code Placeholder */}
                         <div className="bg-white p-6 rounded-3xl mb-8 inline-block shadow-2xl shadow-white/5 relative group">
-                            <div className="w-48 h-48 bg-gray-100 flex items-center justify-center relative">
+                            <div className="w-36 h-36 md:w-48 md:h-48 bg-gray-100 flex items-center justify-center relative">
                                 {/* Simulated QR Pattern */}
                                 <div className="grid grid-cols-4 gap-2 w-full h-full p-4 opacity-20">
                                     {Array.from({ length: 16 }).map((_, i) => (

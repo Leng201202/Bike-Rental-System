@@ -25,7 +25,7 @@ const RentalModal = ({ isOpen, onClose, bike, onConfirm }) => {
 
     return (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-[#121212] border border-gray-800 w-full max-w-lg rounded-[3rem] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300 overflow-hidden">
+            <div className="bg-[#121212] border border-gray-800 w-full max-w-lg rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-10 relative animate-in zoom-in-95 duration-300 overflow-hidden">
                 {/* Decorative background */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
 
@@ -42,7 +42,7 @@ const RentalModal = ({ isOpen, onClose, bike, onConfirm }) => {
                     <div className="mb-4 inline-block px-4 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-[10px] font-black uppercase tracking-widest text-blue-400">
                         Rental Configuration
                     </div>
-                    <h2 className="text-3xl font-black mb-2 uppercase tracking-tight text-white">Choose Your Plan</h2>
+                    <h2 className="text-2xl md:text-3xl font-black mb-2 uppercase tracking-tight text-white">Choose Your Plan</h2>
                     <p className="text-gray-500 text-xs font-bold italic">Select how you want to pay for your ride on {bike.name}</p>
                 </div>
 
@@ -51,13 +51,13 @@ const RentalModal = ({ isOpen, onClose, bike, onConfirm }) => {
                         <button
                             key={method.id}
                             onClick={() => setSelectedMethod(method.id)}
-                            className={`group relative p-6 rounded-3xl border-2 text-left transition-all duration-300 ${selectedMethod === method.id
+                            className={`group relative p-4 md:p-6 rounded-2xl md:rounded-3xl border-2 text-left transition-all duration-300 ${selectedMethod === method.id
                                     ? 'bg-blue-600/10 border-blue-500 shadow-lg shadow-blue-500/10'
                                     : 'bg-gray-800/20 border-gray-700/50 hover:border-gray-600'
                                 }`}
                         >
                             <div className="flex items-center gap-5">
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl transition-transform duration-500 ${selectedMethod === method.id ? 'bg-blue-600 text-white scale-110' : 'bg-gray-800 text-gray-400 group-hover:scale-105'
+                                <div className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center text-2xl md:text-3xl transition-transform duration-500 ${selectedMethod === method.id ? 'bg-blue-600 text-white scale-110' : 'bg-gray-800 text-gray-400 group-hover:scale-105'
                                     }`}>
                                     {method.icon}
                                 </div>

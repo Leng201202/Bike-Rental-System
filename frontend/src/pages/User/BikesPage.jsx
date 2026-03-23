@@ -37,13 +37,13 @@ const BikesPage = ({ isCompact = false }) => {
     return (
         <div className={`${isCompact ? 'py-0 px-0' : 'min-h-screen py-12 px-4'} max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500`}>
             {!isCompact && (
-                <div className="mb-12">
+                <div className="mb-6 md:mb-12">
                     <h1 className="text-4xl font-black mb-2 uppercase tracking-tight">Our Fleet</h1>
                     <p className="text-gray-400 font-medium">Choose your perfect ride for the day.</p>
                 </div>
             )}
 
-            <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6 md:mb-12 gap-4 md:gap-6">
                 {isCompact && (
                     <h2 className="text-xl font-bold uppercase tracking-widest text-gray-400 mr-auto">Available Fleet</h2>
                 )}

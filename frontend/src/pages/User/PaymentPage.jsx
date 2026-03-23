@@ -59,7 +59,7 @@ const PaymentPage = () => {
     };
 
     return (
-        <div className="min-h-screen py-20 px-4 bg-[#0a0a0a] relative overflow-hidden">
+        <div className="min-h-screen py-12 md:py-20 px-4 bg-[#0a0a0a] relative overflow-hidden">
             {/* Background elements */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.1),transparent_50%)]"></div>
 
@@ -72,14 +72,14 @@ const PaymentPage = () => {
                     >
                         ← Back to Management
                     </Button>
-                    <h1 className="text-5xl font-black mb-4 uppercase tracking-tighter text-white">Ride Summary</h1>
+                    <h1 className="text-3xl md:text-5xl font-black mb-4 uppercase tracking-tighter text-white">Ride Summary</h1>
                     <p className="text-gray-400 font-bold italic">Thank you for riding with us today.</p>
                 </div>
 
                 {/* Prominent Map Hero for MILEAGE rentals */}
                 {rental.method === 'MILEAGE' && (
                     <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-1000">
-                        <div className="flex justify-between items-center mb-4 px-2">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 px-2 gap-2">
                             <div className="text-[10px] font-black text-purple-400 uppercase tracking-[0.3em]">Route Traversed Highlight</div>
                             <div className="px-4 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-full text-[10px] font-black text-white italic tracking-widest uppercase">
                                 ~4.2 km Odyssey
@@ -88,19 +88,19 @@ const PaymentPage = () => {
                         <RouteMap
                             route={rental.route}
                             isExpanded={true}
-                            className="!h-[400px] border-purple-500/20 shadow-2xl shadow-purple-500/10 hover:border-purple-500/40 !rounded-[4rem]"
+                            className="!h-[250px] md:!h-[400px] border-purple-500/20 shadow-2xl shadow-purple-500/10 hover:border-purple-500/40 !rounded-[2rem] md:!rounded-[4rem]"
                         />
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 items-start">
                     {/* Left Side: Summary Card */}
-                    <Card className="!p-10 border-gray-800/50 bg-gray-900/20 backdrop-blur-3xl rounded-[3rem] overflow-hidden relative h-full">
+                    <Card className="!p-6 md:!p-10 border-gray-800/50 bg-gray-900/20 backdrop-blur-3xl rounded-[2rem] md:rounded-[3rem] overflow-hidden relative h-full">
                         {/* Bike Image Spotlight */}
                         <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 blur-[80px] -mr-20 -mt-20"></div>
 
-                        <div className="flex items-center gap-6 mb-10 relative z-10">
-                            <div className="w-24 h-24 rounded-2xl overflow-hidden border border-gray-800 shadow-2xl">
+                        <div className="flex items-center gap-4 md:gap-6 mb-6 md:mb-10 relative z-10">
+                            <div className="w-16 h-16 md:w-24 md:h-24 rounded-xl md:rounded-2xl overflow-hidden border border-gray-800 shadow-2xl flex-shrink-0">
                                 <img src={rental.bikeImage} alt={rental.bikeName} className="w-full h-full object-cover" />
                             </div>
                             <div>
@@ -112,7 +112,7 @@ const PaymentPage = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-6 mb-10 pb-10 border-b border-gray-800/50 relative z-10">
+                        <div className="space-y-4 md:space-y-6 mb-6 md:mb-10 pb-6 md:pb-10 border-b border-gray-800/50 relative z-10">
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Plan Selection</span>
                                 <span className={`px-4 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-widest ${rental.method === 'HOURLY' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
@@ -158,8 +158,8 @@ const PaymentPage = () => {
                         <div className="flex justify-between items-end relative z-10">
                             <div>
                                 <div className="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Grand Total Fee</div>
-                                <div className="text-5xl font-black text-white tracking-tighter shadow-blue-500/20 drop-shadow-2xl">
-                                    <span className="text-xl text-blue-500 mr-2 uppercase">฿</span>
+                                <div className="text-3xl md:text-5xl font-black text-white tracking-tighter shadow-blue-500/20 drop-shadow-2xl">
+                                    <span className="text-lg md:text-xl text-blue-500 mr-2 uppercase">฿</span>
                                     {rental.currentCost.toFixed(2)}
                                 </div>
                             </div>
@@ -174,7 +174,7 @@ const PaymentPage = () => {
                     </Card>
 
                     {/* Right Side: Payment Terminal */}
-                    <div className="bg-white/5 border border-white/10 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center shadow-2xl relative overflow-hidden min-h-[500px]">
+                    <div className="bg-white/5 border border-white/10 rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 flex flex-col items-center justify-center text-center shadow-2xl relative overflow-hidden min-h-[400px] md:min-h-[500px]">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
 
                         {step === 'CHECKOUT' && (
@@ -196,7 +196,7 @@ const PaymentPage = () => {
                             <div className="animate-in zoom-in-95 duration-500 w-full">
                                 <h3 className="text-xl font-black text-white mb-8 uppercase tracking-widest">Scan QR Code</h3>
                                 <div className="bg-white p-4 rounded-3xl mb-10 inline-block relative overflow-hidden group">
-                                    <div className="w-56 h-56 bg-gray-50 flex items-center justify-center text-5xl relative">
+                                    <div className="w-44 h-44 md:w-56 md:h-56 bg-gray-50 flex items-center justify-center text-5xl relative">
                                         📱
                                         <div className="absolute inset-0 grid grid-cols-4 gap-2 p-6 opacity-10">
                                             {Array.from({ length: 16 }).map((_, i) => (

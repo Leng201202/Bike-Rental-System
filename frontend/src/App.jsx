@@ -31,7 +31,7 @@ function App() {
         <Navbar />
 
         {/* Global Page Layout */}
-        <main>
+        <main className="pb-20 md:pb-0">
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
               {/* Core Routes */}

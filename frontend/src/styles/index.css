@@ -42,3 +42,21 @@ body {
 .animation-delay-4000 {
   animation-delay: 4s;
 }
+
+/* Hide scrollbar for filter bars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* QR scanning animation */
+@keyframes scan {
+  0%, 100% { top: 1.5rem; }
+  50% { top: calc(100% - 1.5rem); }
+}
+.animate-scan {
+  animation: scan 2s ease-in-out infinite;
+}

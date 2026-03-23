@@ -27,13 +27,13 @@ const UserDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen py-12 px-4 max-w-7xl mx-auto">
-            <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div className="min-h-screen py-6 md:py-12 px-4 max-w-7xl mx-auto">
+            <header className="mb-6 md:mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6">
                 <div>
-                    <h1 className="text-4xl font-black mb-2 animate-in slide-in-from-left duration-700">
+                    <h1 className="text-2xl md:text-4xl font-black mb-2 animate-in slide-in-from-left duration-700">
                         {user?.fullName ? `Welcome, ${user.fullName.split(' ')[0]}` : 'Rider Dashboard'}
                     </h1>
-                    <p className="text-gray-400 font-medium italic">
+                    <p className="text-gray-400 font-medium italic text-sm md:text-base">
                         {activeTab === 'bikes' && "Choose your perfect ride for the day."}
                         {activeTab === 'manage' && "Manage your active rentals and returns."}
                         {activeTab === 'history' && "Review your past rentals and spendings."}
@@ -43,7 +43,7 @@ const UserDashboard = () => {
             </header>
 
             {/* Tab Content */}
-            <div className="min-h-[400px]">
+            <div className="min-h-[300px] md:min-h-[400px]">
                 {renderContent()}
             </div>
         </div>

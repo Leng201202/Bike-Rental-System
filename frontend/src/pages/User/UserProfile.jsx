@@ -47,25 +47,25 @@ const UserProfile = () => {
 
     return (
         <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="bg-gray-800/20 border border-gray-700/30 p-12 rounded-[2.5rem] backdrop-blur-xl shadow-2xl overflow-hidden relative group">
+            <div className="bg-gray-800/20 border border-gray-700/30 p-6 md:p-12 rounded-[1.5rem] md:rounded-[2.5rem] backdrop-blur-xl shadow-2xl overflow-hidden relative group">
                 {/* Decorative Background Element */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-[100px] rounded-full -mr-32 -mt-32"></div>
 
-                <div className="flex flex-col md:flex-row items-center gap-10 mb-12 relative z-10">
+                <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 mb-8 md:mb-12 relative z-10">
                     {/* Avatar Logic */}
                     <div className="relative group">
-                        <div className="w-32 h-32 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-[2.5rem] flex items-center justify-center text-5xl font-black text-white shadow-2xl shadow-blue-500/20 transform transition-transform group-hover:scale-105 duration-500">
+                        <div className="w-20 h-20 md:w-32 md:h-32 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-[1.5rem] md:rounded-[2.5rem] flex items-center justify-center text-3xl md:text-5xl font-black text-white shadow-2xl shadow-blue-500/20 transform transition-transform group-hover:scale-105 duration-500">
                             {user?.username?.charAt(0).toUpperCase()}
                         </div>
                         {isEditing && (
-                            <button className="absolute inset-0 bg-black/60 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button className="absolute inset-0 bg-black/60 rounded-[1.5rem] md:rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <span className="text-[10px] font-black uppercase text-white tracking-widest">Change</span>
                             </button>
                         )}
                     </div>
 
                     <div className="text-center md:text-left">
-                        <h3 className="text-3xl font-black mb-1 uppercase tracking-tight">{user?.fullName || user?.username}</h3>
+                        <h3 className="text-2xl md:text-3xl font-black mb-1 uppercase tracking-tight">{user?.fullName || user?.username}</h3>
                         <div className="flex items-center gap-3 justify-center md:justify-start">
                             <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black rounded-lg uppercase tracking-[0.2em]">
                                 {user?.role}
@@ -95,7 +95,7 @@ const UserProfile = () => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="relative z-10">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mb-8 md:mb-12">
                         <div className="space-y-6">
                             <Input
                                 label="Full Name"
@@ -183,8 +183,8 @@ const UserProfile = () => {
 
             {/* Account Management Sidebar/Bottom Section */}
             {!isEditing && (
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="!p-8 group hover:border-red-500/30 transition-colors">
+                <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <Card className="!p-5 md:!p-8 group hover:border-red-500/30 transition-colors">
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h4 className="text-sm font-black uppercase text-white mb-1">Danger Zone</h4>
@@ -200,7 +200,7 @@ const UserProfile = () => {
                             <button className="text-xs text-red-500 hover:text-red-400 font-black uppercase tracking-widest transition-colors">Terminate Account</button>
                         )}
                     </Card>
-                    <Card className="!p-8 group hover:border-blue-500/30 transition-colors">
+                    <Card className="!p-5 md:!p-8 group hover:border-blue-500/30 transition-colors">
                         <div className="flex justify-between items-start mb-4">
                             <div>
                                 <h4 className="text-sm font-black uppercase text-white mb-1">Privacy Control</h4>

@@ -15,7 +15,7 @@ const BikeFilterBar = ({ activeFilter, onChange }) => {
                 <button
                     key={cat.id}
                     onClick={() => onChange(cat.id)}
-                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${activeFilter === cat.id
+                    className={`px-3 md:px-6 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${activeFilter === cat.id
                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                             : 'text-gray-400 hover:text-white hover:bg-white/5'
                         }`}
