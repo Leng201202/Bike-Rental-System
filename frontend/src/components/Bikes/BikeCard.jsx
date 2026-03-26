@@ -1,17 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '../UI/Card';
 import StatusBadge from '../UI/StatusBadge';
 import Button from '../UI/Button';
 
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1544191696-102dbdaeeec6?auto=format&fit=crop&q=80&w=800';
+
 const BikeCard = ({ bike, onRent, isOwner = false }) => {
+    const [imgSrc, setImgSrc] = useState(bike.imageUrl);
+    const [hasError, setHasError] = useState(false);
+
+    const handleError = () => {
+        if (!hasError) {
+            setImgSrc(FALLBACK_IMAGE);
+            setHasError(true);
+        }
+    };
+
     return (
         <Card className="group overflow-hidden !p-0">
-            <div className="relative h-64 overflow-hidden">
+            <div className="relative h-64 overflow-hidden bg-gray-900">
                 <img
-                    src={bike.imageUrl}
+                    src={imgSrc}
                     alt={bike.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    onError={handleError}
+                    className={`w-full h-full object-cover transition-all duration-700 ${hasError ? 'opacity-50 grayscale' : 'group-hover:scale-110'}`}
                 />
+                {hasError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Image Unavailable</span>
+                    </div>
+                )}
                 <div className="absolute top-6 left-6 flex gap-2">
                     <span className="px-4 py-1.5 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-white border border-white/10">
                         {bike.type}
@@ -26,8 +44,8 @@ const BikeCard = ({ bike, onRent, isOwner = false }) => {
                         {bike.name}
                     </h3>
                     <div className="text-right">
-                        <div className="text-xl font-black text-white">฿{bike.pricePerHour}/hr</div>
-                        <div className="text-sm font-bold text-blue-400">฿{bike.pricePerKm || '2.0'}/km</div>
+                        <div className="text-xl font-black text-white">THB {bike.pricePerHour}/hr</div>
+                        <div className="text-sm font-bold text-blue-400">THB {bike.pricePerKm || '2.0'}/km</div>
                     </div>
                 </div>
                 <p className="text-gray-400 text-sm leading-relaxed mb-8 font-medium italic line-clamp-2">

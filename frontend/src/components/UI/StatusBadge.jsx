@@ -2,7 +2,7 @@ import React from 'react';
 
 const StatusBadge = ({ status, className = "" }) => {
     const config = {
-        AVAILABLE: 'bg-green-500/20 text-green-400 border-green-500/30',
+        AVAILABLE: 'bg-emerald-400 text-emerald-950 border-emerald-400/50 shadow-[0_0_15px_rgba(52,211,153,0.2)]',
         RENTED: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
         MAINTENANCE: 'bg-red-500/20 text-red-400 border-red-500/30',
         COMPLETED: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
