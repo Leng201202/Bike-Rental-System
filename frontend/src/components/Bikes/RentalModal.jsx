@@ -1,16 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Button from "../UI/Button";
 
 const RentalModal = ({ isOpen, onClose, bike, onConfirm }) => {
   const [selectedMethod, setSelectedMethod] = useState("HOURLY");
   const [selectedTiming, setSelectedTiming] = useState("IMMEDIATE");
-
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedMethod("HOURLY");
-      setSelectedTiming("IMMEDIATE");
-    }
-  }, [isOpen]);
 
   if (!isOpen || !bike) return null;
 

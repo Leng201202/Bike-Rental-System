@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import api from '../api/api';
 
 const useAuthStore = create((set) => ({
     user: null,
@@ -42,7 +41,7 @@ const useAuthStore = create((set) => ({
                 loading: false
             });
             return true;
-        } catch (error) {
+        } catch {
             set({
                 error: 'Login failed',
                 loading: false
@@ -62,7 +61,7 @@ const useAuthStore = create((set) => ({
                 loading: false
             }));
             return true;
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to update profile', loading: false });
             return false;
         }
@@ -77,7 +76,7 @@ const useAuthStore = create((set) => ({
                 loading: false
             }));
             return true;
-        } catch (error) {
+        } catch {
             set({ error: 'Payment failed', loading: false });
             return false;
         }
@@ -90,7 +89,7 @@ const useAuthStore = create((set) => ({
             console.log('Registering user in mock mode:', userData);
             set({ loading: false });
             return true;
-        } catch (error) {
+        } catch {
             set({
                 error: 'Registration failed',
                 loading: false

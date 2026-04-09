@@ -1,25 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import useBikeStore from "../../store/useBikeStore";
 import BikeCard from "../../components/Bikes/BikeCard";
 import BikeFilterBar from "../../components/Bikes/BikeFilterBar";
 import RentalModal from "../../components/Bikes/RentalModal";
-import { showToast } from "../../components/UI/PremiumToast";
+import { showToast } from '../../components/UI/toast';
 
 const BikesPage = ({ isCompact = false }) => {
   const { bikes, fetchBikes, rentBike, loading } = useBikeStore();
   const [filter, setFilter] = useState("ALL");
   const [selectedBike, setSelectedBike] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalSeed, setModalSeed] = useState(0);
 
   useEffect(() => {
     fetchBikes();
   }, [fetchBikes]);
 
-  const filteredBikes =
-    filter === "ALL" ? bikes : bikes.filter((bike) => bike.type === filter);
+  const filteredBikes = useMemo(
+    () =>
+      filter === "ALL" ? bikes : bikes.filter((bike) => bike.type === filter),
+    [bikes, filter],
+  );
 
   const handleRentClick = (bike) => {
     setSelectedBike(bike);
+    setModalSeed((prev) => prev + 1);
     setIsModalOpen(true);
   };
 
@@ -72,18 +77,32 @@ const BikesPage = ({ isCompact = false }) => {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredBikes.map((bike) => (
-            <BikeCard
-              key={bike.id}
-              bike={bike}
-              onRent={() => handleRentClick(bike)}
-            />
-          ))}
-        </div>
+        <>
+          {filteredBikes.length === 0 ? (
+            <div className="text-center py-20 bg-white/5 rounded-[2.5rem] border border-white/5">
+              <div className="text-5xl mb-6 opacity-20">🚲</div>
+              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-8 leading-relaxed">
+                No bikes matched this filter.
+                <br />
+                Try a different bike type.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredBikes.map((bike) => (
+                <BikeCard
+                  key={bike.id}
+                  bike={bike}
+                  onRent={() => handleRentClick(bike)}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <RentalModal
+        key={modalSeed}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         bike={selectedBike}

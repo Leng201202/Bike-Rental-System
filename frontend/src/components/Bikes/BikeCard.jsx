@@ -2,13 +2,14 @@ import React from "react";
 import Card from "../UI/Card";
 import StatusBadge from "../UI/StatusBadge";
 import Button from "../UI/Button";
+import SafeBikeImage from "../UI/SafeBikeImage";
 
 const BikeCard = ({ bike, onRent, isOwner = false }) => {
   return (
     <Card className="group overflow-hidden !p-0">
       <div className="relative h-64 overflow-hidden">
-        <img
-          src={bike.imageUrl}
+        <SafeBikeImage
+          bike={bike}
           alt={bike.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />

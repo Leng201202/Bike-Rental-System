@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import Card from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
 import Pagination from '../../components/UI/Pagination';
-import { showToast } from '../../components/UI/PremiumToast';
+import { showToast } from '../../components/UI/toast';
 
 const DebtManagement = () => {
-    const [debts, setDebts] = useState([
+    const [debts] = useState([
         { id: 1, user: 'John Doe', email: 'john@uni.edu', totalDebt: 120.00, lastRide: '2026-02-15', status: 'OVERDUE' },
         { id: 2, user: 'Jane Watson', email: 'jane@uni.edu', totalDebt: 45.50, lastRide: '2026-02-18', status: 'PENDING' },
         { id: 3, user: 'Mike Ross', email: 'mike@university.com', totalDebt: 310.00, lastRide: '2026-02-10', status: 'CRITICAL' },

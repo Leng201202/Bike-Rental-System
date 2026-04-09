@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Button from './Button';
 import Card from './Card';
 
 const PaymentModal = ({ isOpen, onClose, onConfirm, amount, title = "Complete Payment" }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [step, setStep] = useState('QR'); // QR -> PROCESSING -> SUCCESS
+    const [transactionId, setTransactionId] = useState('TRX-00000');
 
-    useEffect(() => {
-        if (!isOpen) {
-            setStep('QR');
-            setIsProcessing(false);
-        }
-    }, [isOpen]);
+    const handleClose = () => {
+        setStep('QR');
+        setIsProcessing(false);
+        onClose();
+    };
 
     if (!isOpen) return null;
 
@@ -24,9 +24,10 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, title = "Complete Pa
 
         const success = await onConfirm();
         if (success) {
+            setTransactionId(`TRX-${Math.floor(Math.random() * 90000 + 10000)}`);
             setStep('SUCCESS');
             setTimeout(() => {
-                onClose();
+                handleClose();
             }, 1500);
         } else {
             setStep('QR');
@@ -41,7 +42,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, title = "Complete Pa
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
 
                 <button
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="absolute top-8 right-8 text-gray-500 hover:text-white transition-colors"
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,7 +109,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, title = "Complete Pa
                             ✓
                         </div>
                         <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-2">Payment Confirmed</h3>
-                        <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Transaction TRX-{Math.floor(Math.random() * 90000 + 10000)}</p>
+                        <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Transaction {transactionId}</p>
                     </div>
                 )}
             </div>

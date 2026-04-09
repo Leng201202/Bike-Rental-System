@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useBikeStore from "../../store/useBikeStore";
 import Button from "../../components/UI/Button";
-import { showToast } from "../../components/UI/PremiumToast";
+import { showToast } from '../../components/UI/toast';
 
 const ManageRentals = () => {
   const navigate = useNavigate();
   const { activeRentals, activateReservation, cancelReservation } =
     useBikeStore();
-  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
 
   // Live ticking clock for tracking
   useEffect(() => {

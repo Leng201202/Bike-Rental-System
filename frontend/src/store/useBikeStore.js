@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import api from "../api/api";
+import { normalizeBike, getBikeImageUrl } from "../utils/bikeData";
 
 const RESERVATION_WINDOW_MINUTES = 30;
 const reservationTimers = new Map();
@@ -118,7 +119,7 @@ const mockBikes = [
 ];
 
 const useBikeStore = create((set) => ({
-  bikes: mockBikes,
+  bikes: mockBikes.map(normalizeBike),
   loading: false,
   error: null,
 
@@ -160,10 +161,20 @@ const useBikeStore = create((set) => ({
   fetchBikes: async () => {
     set({ loading: true, error: null });
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      set({ bikes: mockBikes, loading: false });
+      const response = await api.get("/bikes");
+      const apiBikes = Array.isArray(response?.data) ? response.data : [];
+
+      if (apiBikes.length > 0) {
+        set({ bikes: apiBikes.map(normalizeBike), loading: false });
+        return;
+      }
+
+      set({ bikes: mockBikes.map(normalizeBike), loading: false });
     } catch (error) {
-      set({ error: "Failed to fetch bikes", loading: false });
+      if (import.meta.env.DEV) {
+        console.error("fetchBikes failed, using mock fallback:", error);
+      }
+      set({ bikes: mockBikes.map(normalizeBike), error: "Failed to fetch bikes", loading: false });
     }
   },
 
@@ -182,7 +193,7 @@ const useBikeStore = create((set) => ({
         id: Math.floor(Math.random() * 1000) + 200,
         bikeId,
         bikeName: bike.name,
-        bikeImage: bike.imageUrl,
+        bikeImage: getBikeImageUrl(bike),
         bikeType: bike.type,
         startTime: isReservation ? null : new Date(now).toISOString(),
         currentCost: 0,
@@ -221,7 +232,7 @@ const useBikeStore = create((set) => ({
         success: true,
         rental: newRental,
       };
-    } catch (error) {
+    } catch {
       set({ error: "Failed to rent bike", loading: false });
       return {
         success: false,
@@ -276,7 +287,7 @@ const useBikeStore = create((set) => ({
       }));
 
       return { success: true };
-    } catch (error) {
+    } catch {
       set({ error: "Failed to activate reservation", loading: false });
       return { success: false };
     }
@@ -307,7 +318,7 @@ const useBikeStore = create((set) => ({
       }));
 
       return { success: true };
-    } catch (error) {
+    } catch {
       set({ error: "Failed to cancel reservation", loading: false });
       return { success: false };
     }
@@ -356,7 +367,7 @@ const useBikeStore = create((set) => ({
         loading: false,
       }));
       return true;
-    } catch (error) {
+    } catch {
       set({ error: "Failed to return bike", loading: false });
       return false;
     }
@@ -378,7 +389,7 @@ const useBikeStore = create((set) => ({
         loading: false,
       }));
       return true;
-    } catch (error) {
+    } catch {
       set({ error: "Failed to add bike", loading: false });
       return false;
     }
@@ -395,7 +406,7 @@ const useBikeStore = create((set) => ({
         loading: false,
       }));
       return true;
-    } catch (error) {
+    } catch {
       set({ error: "Failed to update bike", loading: false });
       return false;
     }
@@ -410,7 +421,7 @@ const useBikeStore = create((set) => ({
         loading: false,
       }));
       return true;
-    } catch (error) {
+    } catch {
       set({ error: "Failed to delete bike", loading: false });
       return false;
     }

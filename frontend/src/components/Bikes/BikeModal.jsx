@@ -1,9 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Button from '../UI/Button';
 import Input from '../UI/Input';
 
-const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) => {
-    const [formData, setFormData] = useState({
+const buildInitialFormData = (bike) => {
+    if (bike) {
+        return {
+            name: bike.name,
+            type: bike.type,
+            status: bike.status,
+            pricePerHour: bike.pricePerHour,
+            pricePerKm: bike.pricePerKm || '',
+            imageUrl: bike.imageUrl,
+            description: bike.description || ''
+        };
+    }
+
+    return {
         name: '',
         type: 'CITY',
         status: 'AVAILABLE',
@@ -11,31 +23,11 @@ const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) =>
         pricePerKm: '',
         imageUrl: '',
         description: ''
-    });
+    };
+};
 
-    useEffect(() => {
-        if (bike) {
-            setFormData({
-                name: bike.name,
-                type: bike.type,
-                status: bike.status,
-                pricePerHour: bike.pricePerHour,
-                pricePerKm: bike.pricePerKm || '',
-                imageUrl: bike.imageUrl,
-                description: bike.description || ''
-            });
-        } else {
-            setFormData({
-                name: '',
-                type: 'CITY',
-                status: 'AVAILABLE',
-                pricePerHour: '',
-                pricePerKm: '',
-                imageUrl: '',
-                description: ''
-            });
-        }
-    }, [bike, isOpen]);
+const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) => {
+    const [formData, setFormData] = useState(() => buildInitialFormData(bike));
 
     if (!isOpen) return null;
 

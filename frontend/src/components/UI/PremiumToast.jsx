@@ -46,9 +46,4 @@ const PremiumToast = ({ t, message, type = 'error', icon }) => {
     );
 };
 
-export const showToast = {
-    error: (msg) => toast.custom((t) => <PremiumToast t={t} message={msg} type="error" />),
-    success: (msg, icon) => toast.custom((t) => <PremiumToast t={t} message={msg} type="success" icon={icon} />),
-};
-
 export default PremiumToast;

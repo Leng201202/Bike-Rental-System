@@ -5,7 +5,8 @@ import Button from '../../components/UI/Button';
 import StatusBadge from '../../components/UI/StatusBadge';
 import Card from '../../components/UI/Card';
 import AdminSidebar from '../../components/Layout/AdminSidebar';
-import { showToast } from '../../components/UI/PremiumToast';
+import { showToast } from '../../components/UI/toast';
+import SafeBikeImage from '../../components/UI/SafeBikeImage';
 
 // Sub-view Imports
 import BikeModal from '../../components/Bikes/BikeModal';
@@ -153,7 +154,7 @@ const AdminDashboard = () => {
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-700 border border-white/5 transform group-hover:scale-105 transition-transform">
-                                                <img src={bike.imageUrl} alt="" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                                <SafeBikeImage bike={bike} alt={bike.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                                             </div>
                                             <span className="font-bold text-gray-200 group-hover:text-white transition-colors uppercase tracking-tight">{bike.name}</span>
                                         </div>
@@ -228,6 +229,7 @@ const AdminDashboard = () => {
             </main>
 
             <BikeModal
+                key={`${isModalOpen ? 'open' : 'closed'}-${editingBike?.id ?? 'new'}`}
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSave={handleSaveBike}

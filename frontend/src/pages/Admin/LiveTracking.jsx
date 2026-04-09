@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import useBikeStore from '../../store/useBikeStore';
 import Card from '../../components/UI/Card';
+import SafeBikeImage from '../../components/UI/SafeBikeImage';
 
 // Fix for default marker icons in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -15,7 +16,11 @@ L.Icon.Default.mergeOptions({
 // Component to handle map center changes
 const ChangeView = ({ center, zoom }) => {
     const map = useMap();
-    map.setView(center, zoom);
+    React.useEffect(() => {
+        if (Array.isArray(center) && center.length === 2) {
+            map.setView(center, zoom);
+        }
+    }, [center, zoom, map]);
     return null;
 };
 
@@ -63,11 +68,11 @@ const LiveTracking = () => {
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                         />
 
-                        {selectedBike && (
+                        {selectedBike?.location?.lat && selectedBike?.location?.lng && (
                             <ChangeView center={[selectedBike.location.lat, selectedBike.location.lng]} zoom={18} />
                         )}
 
-                        {bikes.map((bike) => (
+                        {bikes.filter((bike) => bike?.location?.lat && bike?.location?.lng).map((bike) => (
                             <Marker
                                 key={bike.id}
                                 position={[bike.location.lat, bike.location.lng]}
@@ -79,7 +84,7 @@ const LiveTracking = () => {
                                 <Popup className="custom-popup">
                                     <div className="p-2 min-w-[150px]">
                                         <div className="flex gap-3 mb-2">
-                                            <img src={bike.imageUrl} className="w-10 h-10 rounded-lg object-cover" alt="" />
+                                            <SafeBikeImage bike={bike} className="w-10 h-10 rounded-lg object-cover" alt={bike.name} />
                                             <div>
                                                 <div className="font-black text-xs uppercase">{bike.name}</div>
                                                 <div className="text-[10px] text-blue-500 font-bold tracking-widest">{bike.status}</div>

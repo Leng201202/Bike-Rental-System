@@ -4,7 +4,7 @@ import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Card from '../../components/UI/Card';
 import PaymentModal from '../../components/UI/PaymentModal';
-import { showToast } from '../../components/UI/PremiumToast';
+import { showToast } from '../../components/UI/toast';
 
 const UserProfile = () => {
     const { user, updateProfile, payDebt, loading } = useAuthStore();

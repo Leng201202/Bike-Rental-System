@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PermissionCard from '../UI/PermissionCard';
 import PolicyModal from '../UI/PolicyModal';
-import { showToast } from '../UI/PremiumToast';
+import { showToast } from '../UI/toast';
 
 const PermissionAgreement = ({ onComplete, initialPermissions = {} }) => {
     const [permissions, setPermissions] = useState({
