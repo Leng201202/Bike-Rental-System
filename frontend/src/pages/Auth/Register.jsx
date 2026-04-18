@@ -8,9 +8,9 @@ import Button from '../../components/UI/Button';
 function Register() {
     const [formData, setFormData] = useState({
         fullName: '',
-        username: '',
         email: '',
         phoneNumber: '',
+        studentId: '',
         password: '',
         confirmPassword: '',
         role: 'RIDER'
@@ -32,7 +32,13 @@ function Register() {
 
         const success = await register(formData);
         if (success) {
-            useAuthStore.getState().login({ username: formData.username, password: formData.password });
+            useAuthStore.getState().login({
+                identifier: formData.studentId,
+                password: formData.password,
+                fullName: formData.fullName,
+                studentId: formData.studentId,
+                phoneNumber: formData.phoneNumber,
+            });
             showToast.success("Account created successfully!");
             navigate('/permissions');
         } else {
@@ -41,23 +47,19 @@ function Register() {
     };
 
     return (
-        <div className="min-h-[calc(100vh-65px)] flex items-center justify-center px-4 py-12 relative overflow-hidden">
-            <div className="absolute top-0 -left-20 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-10 animate-pulse"></div>
-            <div className="absolute bottom-0 -right-20 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-10 animate-pulse"></div>
+        <div className="min-h-[calc(100vh-65px)] flex items-center justify-center px-4 py-12 bg-[#F7F7F7]">
 
             <div className="w-full max-w-lg relative z-10">
-                <div className="bg-gray-800/40 backdrop-blur-2xl p-10 rounded-3xl border border-gray-700/50 shadow-2xl">
+                <div className="bg-white p-10 rounded-lg border border-[#E5E5E5] shadow-sm">
                     <div className="text-center mb-10">
-                        <h2 className="text-4xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                            Join the Ride
-                        </h2>
-                        <p className="text-gray-400 mt-3 font-medium">Create your campus account in seconds</p>
+                        <h2 className="text-3xl font-semibold text-[#8B2E2E]">User Registration</h2>
+                        <p className="text-[#6B7280] mt-2 font-medium">Create your campus account</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <Input label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="John Doe" required />
-                            <Input label="Username" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe123" required />
+                            <Input label="Student ID" name="studentId" value={formData.studentId} onChange={handleChange} placeholder="64XXXXXXXX" required />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -70,15 +72,15 @@ function Register() {
                             <Input label="Confirm" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" required />
                         </div>
 
-                        <Button type="submit" loading={loading} className="w-full mt-4 py-4 text-lg">
-                            Get Started
+                        <Button type="submit" loading={loading} className="w-full mt-4 py-3 text-base">
+                            Register Account
                         </Button>
                     </form>
 
                     <div className="mt-10 text-center">
-                        <p className="text-gray-400 font-medium">
+                        <p className="text-[#6B7280] font-medium">
                             Already have an account?{' '}
-                            <Link to="/login" className="text-blue-400 hover:text-blue-300 font-bold transition-all border-b border-blue-400/30 hover:border-blue-300">
+                            <Link to="/login" className="text-[#8B2E2E] hover:text-[#6F2323] font-semibold transition-colors border-b border-[#D9A5A5] hover:border-[#8B2E2E]">
                                 Log In
                             </Link>
                         </p>

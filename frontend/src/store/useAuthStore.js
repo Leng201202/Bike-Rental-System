@@ -1,7 +1,37 @@
 import { create } from 'zustand';
+import api, { getApiErrorMessage, unwrapApiResponse } from '../api/api';
+
+const buildDisplayUser = (backendUser, fallback = {}) => ({
+    id: backendUser?.id,
+    username: backendUser?.username || fallback.username || 'demo_user',
+    fullName: backendUser?.fullName || fallback.fullName || 'Rider User',
+    email: backendUser?.email || fallback.email || 'rider@uni.edu',
+    studentId: backendUser?.student_id || backendUser?.studentId || backendUser?.campusId || fallback.studentId || '',
+    phoneNumber: backendUser?.phoneNumber || fallback.phoneNumber || '+66 81-234-5678',
+    role: backendUser?.role || fallback.role || 'RIDER',
+    avatar: null,
+    memberSince: 'February 2026',
+    debt: 0,
+});
+
+const deriveUsernameFromIdentifier = (identifier = '') => {
+    const raw = String(identifier || '').trim().toLowerCase();
+    if (!raw) return `rider_${Date.now()}`;
+    if (raw.includes('@')) return raw.split('@')[0].replace(/[^a-z0-9._-]/g, '') || `rider_${Date.now()}`;
+    return raw.replace(/[^a-z0-9._-]/g, '') || `rider_${Date.now()}`;
+};
+
+const getStoredUser = () => {
+    try {
+        const raw = localStorage.getItem('auth_user');
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+};
 
 const useAuthStore = create((set) => ({
-    user: null,
+    user: getStoredUser(),
     token: localStorage.getItem('token') || null,
     hasAgreedToTerms: localStorage.getItem('hasAgreedToTerms') === 'true',
     isAuthenticated: !!localStorage.getItem('token'),
@@ -16,34 +46,50 @@ const useAuthStore = create((set) => ({
     login: async (credentials) => {
         set({ loading: true, error: null });
         try {
-            // Mock Login Logic for Testing
-            const userLower = (credentials.username || '').toLowerCase();
+            const identifier = credentials.identifier || credentials.username || credentials.email || '';
+            const normalizedStudentId = String(credentials.studentId || identifier || '').trim();
+            const userLower = identifier.toLowerCase();
             const role = userLower.includes('admin') ? 'ADMIN' : 'RIDER';
 
-            const mockUser = {
-                username: credentials.username || 'demo_user',
-                fullName: credentials.username === 'admin' ? 'System Administrator' : 'Alice Smith',
-                email: credentials.username === 'admin' ? 'admin@bikerental.com' : 'alice@uni.edu',
-                campusId: 'ST-48293',
-                phoneNumber: credentials.phoneNumber || '+66 81-234-5678',
-                role: role,
-                avatar: null,
-                memberSince: 'February 2026',
-                debt: credentials.username === 'admin' ? 0 : 45.50 // Default mock debt for riders
-            };
+            let user;
+            if (role === 'ADMIN') {
+                user = buildDisplayUser(null, {
+                    username: deriveUsernameFromIdentifier(identifier) || 'admin',
+                    fullName: 'System Administrator',
+                    email: identifier.includes('@') ? identifier : 'admin@bikerental.com',
+                    role: 'ADMIN',
+                    debt: 0,
+                });
+            } else {
+                const resolvedEmail = identifier.includes('@')
+                    ? identifier.toLowerCase()
+                    : `${deriveUsernameFromIdentifier(normalizedStudentId)}@uni.edu`;
+
+                const payload = {
+                    username: deriveUsernameFromIdentifier(normalizedStudentId),
+                    fullName: credentials.fullName || deriveUsernameFromIdentifier(identifier) || 'Campus Rider',
+                    email: resolvedEmail,
+                    phoneNumber: credentials.phoneNumber || '+66 81-234-5678',
+                    student_id: normalizedStudentId || credentials.campusId || '',
+                };
+                const backendUser = unwrapApiResponse(await api.post('/users/sync', payload));
+                user = buildDisplayUser(backendUser, { role: 'RIDER' });
+            }
+
             const mockToken = `mock-jwt-token-${role}`;
 
             localStorage.setItem('token', mockToken);
+            localStorage.setItem('auth_user', JSON.stringify(user));
             set({
-                user: mockUser,
+                user,
                 token: mockToken,
                 isAuthenticated: true,
                 loading: false
             });
             return true;
-        } catch {
+        } catch (error) {
             set({
-                error: 'Login failed',
+                error: getApiErrorMessage(error, 'Login failed'),
                 loading: false
             });
             return false;
@@ -53,13 +99,16 @@ const useAuthStore = create((set) => ({
     updateProfile: async (profileData) => {
         set({ loading: true, error: null });
         try {
-            // Simulate API Latency
             await new Promise(resolve => setTimeout(resolve, 800));
 
-            set(state => ({
-                user: { ...state.user, ...profileData },
-                loading: false
-            }));
+            set(state => {
+                const updatedUser = { ...state.user, ...profileData };
+                localStorage.setItem('auth_user', JSON.stringify(updatedUser));
+                return {
+                    user: updatedUser,
+                    loading: false,
+                };
+            });
             return true;
         } catch {
             set({ error: 'Failed to update profile', loading: false });
@@ -85,13 +134,18 @@ const useAuthStore = create((set) => ({
     register: async (userData) => {
         set({ loading: true, error: null });
         try {
-            // Mock Registration for Testing
-            console.log('Registering user in mock mode:', userData);
+            const payload = {
+                fullName: userData.fullName,
+                email: userData.email,
+                phoneNumber: userData.phoneNumber,
+                student_id: userData.studentId,
+            };
+            unwrapApiResponse(await api.post('/users/sync', payload));
             set({ loading: false });
             return true;
-        } catch {
+        } catch (error) {
             set({
-                error: 'Registration failed',
+                error: getApiErrorMessage(error, 'Registration failed'),
                 loading: false
             });
             return false;
@@ -101,10 +155,16 @@ const useAuthStore = create((set) => ({
     logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('hasAgreedToTerms');
+        localStorage.removeItem('auth_user');
         set({ user: null, token: null, isAuthenticated: false, hasAgreedToTerms: false });
     },
 
     setUser: (user) => set({ user }),
+
+    hasCompletedStudentId: () => {
+        const user = useAuthStore.getState().user;
+        return Boolean(user?.studentId && String(user.studentId).trim());
+    },
 }));
 
 export default useAuthStore;

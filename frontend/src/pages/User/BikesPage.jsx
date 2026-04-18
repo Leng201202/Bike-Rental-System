@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import useBikeStore from "../../store/useBikeStore";
 import BikeCard from "../../components/Bikes/BikeCard";
 import BikeFilterBar from "../../components/Bikes/BikeFilterBar";
@@ -6,6 +7,7 @@ import RentalModal from "../../components/Bikes/RentalModal";
 import { showToast } from '../../components/UI/toast';
 
 const BikesPage = ({ isCompact = false }) => {
+  const navigate = useNavigate();
   const { bikes, fetchBikes, rentBike, loading } = useBikeStore();
   const [filter, setFilter] = useState("ALL");
   const [selectedBike, setSelectedBike] = useState(null);
@@ -38,6 +40,9 @@ const BikesPage = ({ isCompact = false }) => {
           : `Started rental for ${selectedBike.name}!`,
       );
       setIsModalOpen(false);
+      if (!isReservation) {
+        navigate("/map");
+      }
     } else {
       showToast.error(`Failed to start rental for ${selectedBike.name}.`);
     }

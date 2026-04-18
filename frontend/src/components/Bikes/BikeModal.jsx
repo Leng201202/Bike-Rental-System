@@ -11,7 +11,10 @@ const buildInitialFormData = (bike) => {
             pricePerHour: bike.pricePerHour,
             pricePerKm: bike.pricePerKm || '',
             imageUrl: bike.imageUrl,
-            description: bike.description || ''
+            description: bike.description || '',
+            currentZone: bike.location?.zone || bike.currentZone || '',
+            currentLat: bike.location?.lat ?? bike.currentLat ?? '',
+            currentLng: bike.location?.lng ?? bike.currentLng ?? ''
         };
     }
 
@@ -22,12 +25,36 @@ const buildInitialFormData = (bike) => {
         pricePerHour: '',
         pricePerKm: '',
         imageUrl: '',
-        description: ''
+        description: '',
+        currentZone: '',
+        currentLat: '',
+        currentLng: ''
     };
 };
 
 const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) => {
     const [formData, setFormData] = useState(() => buildInitialFormData(bike));
+
+    const handleDetectGps = () => {
+        if (!('geolocation' in navigator)) {
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setFormData((prev) => ({
+                    ...prev,
+                    currentLat: Number(position.coords.latitude.toFixed(7)),
+                    currentLng: Number(position.coords.longitude.toFixed(7)),
+                    currentZone: prev.currentZone || 'GPS Captured',
+                }));
+            },
+            () => {
+                // No-op: keep manual entry available.
+            },
+            { enableHighAccuracy: true }
+        );
+    };
 
     if (!isOpen) return null;
 
@@ -114,8 +141,43 @@ const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) =>
                             </select>
                         </div>
                         <div className="space-y-2">
-                            {/* Empty space for alignment if needed, or another field */}
+                            <Input
+                                label="Zone"
+                                placeholder="e.g. Engineering Gate"
+                                value={formData.currentZone}
+                                onChange={(e) => setFormData({ ...formData, currentZone: e.target.value })}
+                            />
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Input
+                            label="Latitude"
+                            type="number"
+                            step="0.0000001"
+                            placeholder="20.0461000"
+                            value={formData.currentLat}
+                            onChange={(e) => setFormData({ ...formData, currentLat: e.target.value })}
+                        />
+                        <Input
+                            label="Longitude"
+                            type="number"
+                            step="0.0000001"
+                            placeholder="99.8949000"
+                            value={formData.currentLng}
+                            onChange={(e) => setFormData({ ...formData, currentLng: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="px-6 py-2 text-[10px] uppercase tracking-widest"
+                            onClick={handleDetectGps}
+                        >
+                            Use My GPS
+                        </Button>
                     </div>
 
                     <Input

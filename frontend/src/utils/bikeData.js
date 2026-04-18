@@ -34,7 +34,8 @@ export const normalizeBike = (bike = {}) => ({
   imageUrl: getBikeImageUrl(bike),
   location: {
     ...(bike.location || {}),
-    lat: Number(bike.location?.lat ?? bike.lat ?? 0),
-    lng: Number(bike.location?.lng ?? bike.lng ?? 0),
+    lat: Number(bike.location?.lat ?? bike.currentLat ?? bike.lat ?? 0),
+    lng: Number(bike.location?.lng ?? bike.currentLng ?? bike.lng ?? 0),
+    zone: bike.location?.zone || bike.currentZone || bike.zone || "Campus",
   },
 });

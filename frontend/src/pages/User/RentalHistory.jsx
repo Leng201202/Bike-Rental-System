@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import useBikeStore from '../../store/useBikeStore';
 
 const RentalHistory = () => {
-    const { rentalHistory } = useBikeStore();
+    const { rentalHistory, fetchBikes } = useBikeStore();
+
+    useEffect(() => {
+        fetchBikes();
+    }, [fetchBikes]);
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">

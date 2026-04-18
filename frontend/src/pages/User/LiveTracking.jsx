@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import useBikeStore from "../../store/useBikeStore";
 import RouteToBike from "./RouteToBike";
@@ -56,6 +56,53 @@ const formatTravelTime = (durationInSeconds) => {
   return `${hours}h ${remainingMinutes}m`;
 };
 
+const getRideTrackStorageKey = (rentalId) => `ride-gps-track-${rentalId}`;
+const MIN_TRACKING_DISTANCE_METERS = 5;
+const MIN_TRACKING_INTERVAL_MS = 5000;
+
+const readRideTrack = (rentalId) => {
+  if (!rentalId) return [];
+  try {
+    const raw = localStorage.getItem(getRideTrackStorageKey(rentalId));
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((point) => [Number(point?.lat), Number(point?.lng)])
+      .filter(([lat, lng]) => isValidCoordinate(lat, lng));
+  } catch {
+    return [];
+  }
+};
+
+const saveRideTrackPoint = (rentalId, point) => {
+  if (!rentalId || !isValidCoordinate(point?.lat, point?.lng)) return;
+
+  try {
+    const key = getRideTrackStorageKey(rentalId);
+    const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+    const points = Array.isArray(parsed) ? parsed : [];
+    const lastPoint = points[points.length - 1];
+
+    if (lastPoint) {
+      const lastTimestamp = Number(lastPoint.timestamp || 0);
+      const nowTimestamp = Number(point.timestamp || 0);
+      const timeDelta = nowTimestamp - lastTimestamp;
+      const distanceDelta = calculateDistance(lastPoint.lat, lastPoint.lng, point.lat, point.lng) || 0;
+      if (timeDelta < MIN_TRACKING_INTERVAL_MS && distanceDelta < MIN_TRACKING_DISTANCE_METERS) {
+        return;
+      }
+    }
+
+    const nextPoints = [...points, point].slice(-1500);
+    localStorage.setItem(key, JSON.stringify(nextPoints));
+  } catch {
+    // Ignore storage errors so tracking UI remains usable.
+  }
+};
+
 // Fix for default marker icons in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -71,8 +118,8 @@ L.Icon.Default.mergeOptions({
 const bikeIcon = new L.DivIcon({
   className: "custom-bike-icon",
   html: `<div class="relative">
-            <div class="absolute inset-0 w-12 h-12 bg-blue-500/20 rounded-full animate-ping -m-4"></div>
-            <div class="relative bg-white border-2 border-blue-500 p-2 rounded-full shadow-2xl flex items-center justify-center text-xl">🚲</div>
+            <div class="absolute inset-0 w-12 h-12 bg-[#8B2E2E]/20 rounded-full animate-ping -m-4"></div>
+            <div class="relative bg-white border-2 border-[#8B2E2E] p-2 rounded-full shadow-xl flex items-center justify-center text-xl">🚲</div>
            </div>`,
   iconSize: [40, 40],
   iconAnchor: [20, 20],
@@ -99,8 +146,8 @@ const maintenanceBikeIcon = new L.DivIcon({
 const selectedActiveBikeIcon = new L.DivIcon({
   className: "custom-bike-icon",
   html: `<div class="relative">
-            <div class="absolute inset-0 w-14 h-14 bg-cyan-400/25 rounded-full -m-5 animate-pulse"></div>
-            <div class="relative bg-white border-2 border-cyan-300 p-2 rounded-full shadow-2xl flex items-center justify-center text-xl">🚲</div>
+            <div class="absolute inset-0 w-14 h-14 bg-[#8B2E2E]/20 rounded-full -m-5 animate-pulse"></div>
+            <div class="relative bg-white border-2 border-[#8B2E2E] p-2 rounded-full shadow-2xl flex items-center justify-center text-xl">🚲</div>
            </div>`,
   iconSize: [44, 44],
   iconAnchor: [22, 22],
@@ -110,7 +157,7 @@ const selectedAvailableBikeIcon = new L.DivIcon({
   className: "custom-bike-icon",
   html: `<div class="relative">
             <div class="absolute inset-0 w-12 h-12 bg-emerald-400/20 rounded-full -m-4"></div>
-            <div class="relative bg-white border-2 border-cyan-300 p-2 rounded-full shadow-2xl flex items-center justify-center text-xl">🚲</div>
+            <div class="relative bg-white border-2 border-[#8B2E2E] p-2 rounded-full shadow-2xl flex items-center justify-center text-xl">🚲</div>
            </div>`,
   iconSize: [40, 40],
   iconAnchor: [20, 20],
@@ -120,7 +167,7 @@ const selectedMaintenanceBikeIcon = new L.DivIcon({
   className: "custom-bike-icon",
   html: `<div class="relative opacity-85">
             <div class="absolute inset-0 w-12 h-12 bg-zinc-400/20 rounded-full -m-4"></div>
-            <div class="relative bg-zinc-200 border-2 border-cyan-300 p-2 rounded-full shadow-xl flex items-center justify-center text-xl grayscale">🚲</div>
+            <div class="relative bg-zinc-200 border-2 border-[#8B2E2E] p-2 rounded-full shadow-xl flex items-center justify-center text-xl grayscale">🚲</div>
            </div>`,
   iconSize: [40, 40],
   iconAnchor: [20, 20],
@@ -138,7 +185,7 @@ const RecenterMap = ({ lat, lng }) => {
 };
 
 const LiveTracking = () => {
-  const { activeRentals, bikes } = useBikeStore();
+  const { activeRentals, bikes, fetchBikes } = useBikeStore();
   const [selectedBike, setSelectedBike] = useState(null);
   const [selectedMapBikeId, setSelectedMapBikeId] = useState(null);
   const [userLoc, setUserLoc] = useState(null);
@@ -146,6 +193,11 @@ const LiveTracking = () => {
   const [locationError, setLocationError] = useState(null);
   const [routeInfo, setRouteInfo] = useState(null);
   const hasAutoFocusedNearest = useRef(false);
+  const trackedRentalIdRef = useRef(null);
+
+  useEffect(() => {
+    fetchBikes();
+  }, [fetchBikes]);
 
   const trackableRentals = useMemo(
     () => activeRentals.filter((rental) => rental.status === "ACTIVE"),
@@ -183,6 +235,20 @@ const LiveTracking = () => {
 
     return trackableRentals[0] || null;
   }, [selectedBike, trackableRentals]);
+
+  useEffect(() => {
+    const nextRentalId = selectedActiveBike?.id || null;
+    if (!nextRentalId || trackedRentalIdRef.current === nextRentalId) return;
+
+    trackedRentalIdRef.current = nextRentalId;
+    if (userLoc) {
+      saveRideTrackPoint(nextRentalId, {
+        lat: userLoc.lat,
+        lng: userLoc.lng,
+        timestamp: Date.now(),
+      });
+    }
+  }, [selectedActiveBike, userLoc]);
 
   const findNearestRentalFromLocation = useCallback(
     (location) => {
@@ -280,6 +346,25 @@ const LiveTracking = () => {
     return null;
   }, [mapBikes, selectedActiveBike, selectedMapBikeId]);
 
+  const activeRideTrail = useMemo(() => {
+    if (!selectedActiveBike?.id) return [];
+
+    const trail = readRideTrack(selectedActiveBike.id);
+    if (!userLoc) return trail;
+
+    const lastPoint = trail[trail.length - 1];
+    if (!lastPoint) {
+      return [[userLoc.lat, userLoc.lng]];
+    }
+
+    const [lastLat, lastLng] = lastPoint;
+    if (lastLat === userLoc.lat && lastLng === userLoc.lng) {
+      return trail;
+    }
+
+    return [...trail, [userLoc.lat, userLoc.lng]];
+  }, [selectedActiveBike, userLoc]);
+
   // Watch user's live location
   useEffect(() => {
     if (!("geolocation" in navigator) || !locationGranted) return;
@@ -292,6 +377,14 @@ const LiveTracking = () => {
         };
 
         setUserLoc(nextUserLoc);
+
+        if (selectedActiveBike?.id) {
+          saveRideTrackPoint(selectedActiveBike.id, {
+            lat: nextUserLoc.lat,
+            lng: nextUserLoc.lng,
+            timestamp: Date.now(),
+          });
+        }
 
         if (!hasAutoFocusedNearest.current) {
           const nearestRental = findNearestRentalFromLocation(nextUserLoc);
@@ -307,7 +400,7 @@ const LiveTracking = () => {
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [findNearestRentalFromLocation, locationGranted]);
+  }, [findNearestRentalFromLocation, locationGranted, selectedActiveBike]);
 
   const requestLocationAccess = () => {
     setLocationError(null);
@@ -372,19 +465,19 @@ const LiveTracking = () => {
   }, [mapBikes]);
 
   return (
-    <div className="min-h-[calc(100vh-73px)] h-[calc(100vh-73px)] flex flex-col md:flex-row bg-[#080808] overflow-hidden">
+    <div className="min-h-[calc(100vh-73px)] h-[calc(100vh-73px)] flex flex-col md:flex-row bg-[#F3F4F6] overflow-hidden">
       {/* Sidebar List */}
-      <div className="w-full md:w-80 border-r border-white/5 bg-gray-900/10 backdrop-blur-3xl p-6 flex flex-col z-20">
+      <div className="w-full md:w-80 border-r border-[#E5E7EB] bg-white p-6 flex flex-col z-20">
         <div className="mb-10">
-          <div className="text-[10px] font-black uppercase text-blue-500 tracking-[0.3em] mb-2 flex items-center gap-2">
-            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-            Satellite Link Active
+          <div className="text-[10px] font-bold uppercase text-[#8B2E2E] tracking-[0.24em] mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 bg-[#8B2E2E] rounded-full animate-pulse"></span>
+            Live GPS Ready
           </div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter text-white">
-            Live Maps
+          <h1 className="text-3xl font-semibold tracking-tight text-[#2F2F2F]">
+            Campus Map
           </h1>
-          <p className="text-gray-500 text-[10px] font-bold italic">
-            Real-time GPS Telemetry
+          <p className="text-[#6B7280] text-xs font-medium mt-1">
+            Track your active ride and nearby bikes in real time.
           </p>
         </div>
 
@@ -405,10 +498,10 @@ const LiveTracking = () => {
                     : "Available";
               const statusClass =
                 bike.status === "MAINTENANCE"
-                  ? "bg-rose-500/15 text-rose-300 border border-rose-400/40"
+                  ? "bg-[#FEF2F2] text-[#B91C1C] border border-[#FECACA]"
                   : isActiveBike
-                    ? "bg-blue-500/20 text-blue-300 border border-blue-400/40"
-                    : "bg-emerald-500/15 text-emerald-300 border border-emerald-400/40";
+                    ? "bg-[#FCEAEA] text-[#8B2E2E] border border-[#F2CACA]"
+                    : "bg-[#ECFDF3] text-[#047857] border border-[#A7F3D0]";
 
               return (
               <button
@@ -419,13 +512,13 @@ const LiveTracking = () => {
                 }}
                 className={`w-full p-4 rounded-3xl border-2 transition-all duration-500 text-left group ${
                   isSelected
-                    ? "bg-blue-600/10 border-blue-500/50 shadow-2xl shadow-blue-500/10"
-                    : "bg-white/5 border-transparent hover:bg-white/10"
+                    ? "bg-[#FCEAEA] border-[#8B2E2E]/40 shadow-sm"
+                    : "bg-[#F9FAFB] border-transparent hover:bg-[#F3F4F6]"
                 }`}
               >
                 <div className="flex items-center gap-4">
                   <div
-                    className={`w-14 h-14 rounded-2xl overflow-hidden border-2 transition-colors ${isSelected ? "border-blue-500" : "border-gray-800"}`}
+                    className={`w-14 h-14 rounded-xl overflow-hidden border transition-colors ${isSelected ? "border-[#8B2E2E]" : "border-[#E5E7EB]"}`}
                   >
                     <SafeBikeImage
                       bike={bike}
@@ -437,12 +530,12 @@ const LiveTracking = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <h3
-                        className={`font-black uppercase tracking-tight text-xs truncate ${isSelected ? "text-white" : "text-gray-400 group-hover:text-white"}`}
+                        className={`font-semibold tracking-tight text-sm truncate ${isSelected ? "text-[#2F2F2F]" : "text-[#4B5563] group-hover:text-[#2F2F2F]"}`}
                       >
                         {bike.bikeName}
                       </h3>
                       {isNearestBike && (
-                        <span className="shrink-0 px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-blue-500/20 text-blue-300 border border-blue-400/40">
+                        <span className="shrink-0 px-2 py-1 rounded-full text-[9px] font-semibold uppercase tracking-wide bg-[#FCEAEA] text-[#8B2E2E] border border-[#F2CACA]">
                           Nearest Bike
                         </span>
                       )}
@@ -456,18 +549,18 @@ const LiveTracking = () => {
                       {isActiveBike && (
                         <>
                           <div className="flex items-center gap-1">
-                            <div className="w-1 h-3 bg-blue-500/50 rounded-full"></div>
-                            <div className="w-1 h-3 bg-blue-500/80 rounded-full"></div>
-                            <div className="w-1 h-3 bg-blue-500 rounded-full"></div>
+                            <div className="w-1 h-3 bg-[#8B2E2E]/40 rounded-full"></div>
+                            <div className="w-1 h-3 bg-[#8B2E2E]/70 rounded-full"></div>
+                            <div className="w-1 h-3 bg-[#8B2E2E] rounded-full"></div>
                           </div>
-                          <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest">
-                            Tracking...
+                          <span className="text-[8px] font-semibold text-[#8B2E2E] uppercase tracking-widest">
+                            Active
                           </span>
                         </>
                       )}
                     </div>
                     {isNearestBike && (
-                      <p className="mt-1 text-[9px] font-bold text-blue-200 uppercase tracking-wide">
+                      <p className="mt-1 text-[10px] font-semibold text-[#8B2E2E] uppercase tracking-wide">
                         {formatDistance(nearestBikeData.distance)}
                       </p>
                     )}
@@ -477,9 +570,9 @@ const LiveTracking = () => {
               );
             })
           ) : (
-            <div className="text-center py-20 bg-white/5 rounded-[2.5rem] border border-white/5">
+            <div className="text-center py-20 bg-[#F9FAFB] rounded-2xl border border-[#E5E7EB]">
               <div className="text-5xl mb-6 opacity-20">🗺️</div>
-              <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-8 leading-relaxed">
+              <p className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-widest px-8 leading-relaxed">
                 No bikes detected.
                 <br />
                 Add or fetch bikes to view live map data.
@@ -490,17 +583,17 @@ const LiveTracking = () => {
 
         {selectedActiveBike && (
           <div className="mt-6 space-y-3">
-            <div className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 p-5 rounded-[2rem] border border-white/5">
+            <div className="bg-[#F9FAFB] p-5 rounded-xl border border-[#E5E7EB]">
               <div className="flex justify-between items-center mb-4">
-                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">
+                <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-widest">
                   Battery
                 </span>
-                <span className="text-green-500 font-black text-[10px]">
+                <span className="text-[#047857] font-semibold text-xs">
                   84%
                 </span>
               </div>
-              <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 w-[84%]"></div>
+              <div className="w-full h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
+                <div className="h-full bg-[#047857] w-[84%]"></div>
               </div>
             </div>
           </div>
@@ -523,27 +616,27 @@ const LiveTracking = () => {
 
           {/* Pre-Permission Blur Overlay */}
           {!locationGranted && (
-            <div className="absolute inset-0 z-[2000] backdrop-blur-xl bg-black/60 flex flex-col items-center justify-center p-6 text-center">
-              <div className="bg-gray-900/90 border border-white/10 p-8 rounded-[3rem] shadow-2xl max-w-sm w-full relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+            <div className="absolute inset-0 z-[2000] bg-white/75 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+              <div className="bg-white border border-[#E5E7EB] p-8 rounded-2xl shadow-xl max-w-sm w-full relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-[#8B2E2E]"></div>
+                <div className="w-20 h-20 bg-[#FCEAEA] rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
                   📍
                 </div>
-                <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">
-                  Enable Live Tracking
+                <h3 className="text-2xl font-semibold text-[#2F2F2F] tracking-tight mb-2">
+                  Enable Location Access
                 </h3>
-                <p className="text-gray-400 text-xs font-bold leading-relaxed mb-8">
-                  We need access to your device's GPS to show your live location
-                  relative to the rented bikes.
+                <p className="text-[#6B7280] text-sm leading-relaxed mb-8">
+                  Allow location access so we can show your position, nearest bike,
+                  and route guidance.
                 </p>
                 <button
                   onClick={requestLocationAccess}
-                  className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-colors shadow-lg shadow-blue-500/20"
+                  className="w-full py-3 bg-[#8B2E2E] hover:bg-[#6F2323] text-white rounded-md font-semibold text-sm tracking-wide transition-colors"
                 >
-                  Grant GPS Access
+                  Allow GPS Access
                 </button>
                 {locationError && (
-                  <p className="text-red-400 text-[10px] font-bold mt-4 animate-in slide-in-from-bottom-2">
+                  <p className="text-[#B91C1C] text-xs font-medium mt-4 animate-in slide-in-from-bottom-2">
                     {locationError}
                   </p>
                 )}
@@ -557,6 +650,19 @@ const LiveTracking = () => {
               destination={routeTarget}
               onRouteInfoChange={setRouteInfo}
             />
+          )}
+
+          {activeRideTrail.length >= 2 && (
+            <>
+              <Polyline
+                positions={activeRideTrail}
+                pathOptions={{ color: "#F2CACA", weight: 8, opacity: 0.45 }}
+              />
+              <Polyline
+                positions={activeRideTrail}
+                pathOptions={{ color: "#8B2E2E", weight: 4, opacity: 0.95 }}
+              />
+            </>
           )}
 
           {visibleMapBikes.map((bike) => {
@@ -595,10 +701,10 @@ const LiveTracking = () => {
                   : "Available";
             const statusBadgeClass =
               bike.status === "MAINTENANCE"
-                ? "bg-rose-500/15 text-rose-300 border border-rose-400/40"
+                ? "bg-[#FEF2F2] text-[#B91C1C] border border-[#FECACA]"
                 : isActiveBike
-                  ? "bg-blue-500/20 text-blue-300 border border-blue-400/40"
-                  : "bg-emerald-500/15 text-emerald-300 border border-emerald-400/40";
+                  ? "bg-[#FCEAEA] text-[#8B2E2E] border border-[#F2CACA]"
+                  : "bg-[#ECFDF3] text-[#047857] border border-[#A7F3D0]";
 
             return (
               <Marker
@@ -614,7 +720,7 @@ const LiveTracking = () => {
               >
                 <Popup className="custom-popup">
                   <div className="p-2 text-center">
-                    <div className="font-black uppercase text-[10px] mb-1 text-blue-500">
+                    <div className="font-semibold uppercase text-[10px] mb-1 text-[#8B2E2E]">
                       {bike.bikeName}
                     </div>
                     <div
@@ -622,21 +728,21 @@ const LiveTracking = () => {
                     >
                       {statusLabel}
                     </div>
-                    <div className="text-[8px] font-bold text-gray-500 uppercase mt-2">
+                    <div className="text-[9px] font-medium text-[#6B7280] uppercase mt-2">
                       {isActiveBike
                         ? isLive
-                          ? "Live GPS Telemetry"
+                          ? "Live GPS"
                           : "Last Known Location"
                         : statusLabel}
                     </div>
                     {isNearestBike && (
-                      <div className="mt-2 text-[8px] font-black uppercase tracking-widest text-blue-300">
+                      <div className="mt-2 text-[9px] font-semibold uppercase tracking-wide text-[#8B2E2E]">
                         Nearest Bike
                         {nearestDistanceLabel ? ` | ${nearestDistanceLabel}` : ""}
                       </div>
                     )}
                     {isSelectedMapBike && routeInfo && (
-                      <div className="mt-2 text-[8px] font-black uppercase tracking-widest text-cyan-300">
+                      <div className="mt-2 text-[9px] font-semibold uppercase tracking-wide text-[#8B2E2E]">
                         {routeInfo.error
                           ? routeInfo.error
                           : `${routeInfo.label || "Shortest Route"}: ${formatDistance(routeInfo.distance)} | ${formatTravelTime(routeInfo.duration)}`}
@@ -658,14 +764,14 @@ const LiveTracking = () => {
 
         {/* Map HUD Elements */}
         <div className="absolute top-8 right-8 flex flex-col gap-4 z-[1000]">
-          <div className="bg-black/80 backdrop-blur-xl p-4 rounded-3xl border border-white/10 shadow-2xl">
-            <div className="text-[8px] font-black text-blue-500 uppercase tracking-[0.2em] mb-1">
-              MFU Campus Grid
+          <div className="bg-white/95 p-4 rounded-xl border border-[#E5E7EB] shadow-md">
+            <div className="text-[9px] font-semibold text-[#8B2E2E] uppercase tracking-[0.18em] mb-1">
+              MFU Campus
             </div>
-            <div className="text-xs font-bold text-white uppercase tracking-widest">
-              Main Plaza // Zone B
+            <div className="text-xs font-semibold text-[#2F2F2F] uppercase tracking-wide">
+              Main Plaza / Zone B
             </div>
-            <div className="text-xs font-mono text-white mt-2">
+            <div className="text-xs font-mono text-[#374151] mt-2">
               LAT:{" "}
               {userLoc
                 ? userLoc.lat.toFixed(4)
@@ -679,23 +785,23 @@ const LiveTracking = () => {
           </div>
 
           {routeTarget && routeInfo && (
-            <div className="bg-black/80 backdrop-blur-xl p-4 rounded-3xl border border-cyan-400/20 shadow-2xl">
-              <div className="text-[8px] font-black text-cyan-300 uppercase tracking-[0.2em] mb-1">
+            <div className="bg-white/95 p-4 rounded-xl border border-[#F2CACA] shadow-md">
+              <div className="text-[9px] font-semibold text-[#8B2E2E] uppercase tracking-[0.18em] mb-1">
                 {routeInfo.label || "Shortest Route"}
               </div>
-              <div className="text-xs font-bold text-white uppercase tracking-widest truncate">
+              <div className="text-xs font-semibold text-[#2F2F2F] uppercase tracking-wide truncate">
                 {routeTarget.bikeName}
               </div>
               {routeInfo.error ? (
-                <div className="text-[10px] font-black text-rose-300 uppercase tracking-widest mt-2">
+                <div className="text-[10px] font-semibold text-[#B91C1C] uppercase tracking-wide mt-2">
                   {routeInfo.error}
                 </div>
               ) : (
                 <>
-                  <div className="text-[10px] font-black text-cyan-200 uppercase tracking-widest mt-2">
+                  <div className="text-[10px] font-semibold text-[#8B2E2E] uppercase tracking-wide mt-2">
                     {formatDistance(routeInfo.distance)}
                   </div>
-                  <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest mt-1">
+                  <div className="text-[10px] font-medium text-[#6B7280] uppercase tracking-wide mt-1">
                     {formatTravelTime(routeInfo.duration)}
                   </div>
                 </>
@@ -705,10 +811,10 @@ const LiveTracking = () => {
         </div>
 
         <div className="absolute bottom-10 left-10 z-[1000] pointer-events-none">
-          <div className="bg-black/60 backdrop-blur-md border border-white/10 p-2 rounded-2xl flex items-center gap-3">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
-            <span className="text-[10px] font-black text-white uppercase tracking-widest pr-2">
-              Live Stream
+          <div className="bg-white/95 border border-[#F2CACA] p-2 rounded-xl flex items-center gap-3 shadow-md">
+            <div className="w-2.5 h-2.5 bg-[#8B2E2E] rounded-full animate-ping"></div>
+            <span className="text-[10px] font-semibold text-[#8B2E2E] uppercase tracking-widest pr-2">
+              Live Tracking
             </span>
           </div>
         </div>
@@ -716,17 +822,17 @@ const LiveTracking = () => {
 
       <style>{`
                 .custom-popup .leaflet-popup-content-wrapper {
-                    background: rgba(18, 18, 18, 0.95);
-                    color: white;
-                    border-radius: 1.5rem;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    backdrop-filter: blur(10px);
+                  background: #ffffff;
+                  color: #2f2f2f;
+                  border-radius: 0.75rem;
+                  border: 1px solid #e5e7eb;
+                  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
                 }
                 .custom-popup .leaflet-popup-tip {
-                    background: rgba(18, 18, 18, 0.95);
+                  background: #ffffff;
                 }
                 .leaflet-container {
-                    background: #0a0a0a !important;
+                  background: #f3f4f6 !important;
                 }
             `}</style>
     </div>

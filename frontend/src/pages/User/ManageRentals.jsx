@@ -4,11 +4,66 @@ import useBikeStore from "../../store/useBikeStore";
 import Button from "../../components/UI/Button";
 import { showToast } from '../../components/UI/toast';
 
+const getRideTrackStorageKey = (rentalId) => `ride-gps-track-${rentalId}`;
+
+const haversineMeters = (lat1, lng1, lat2, lng2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const earthRadius = 6371000;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadius * c;
+};
+
+const getTrackedDistanceKm = (rentalId) => {
+  if (!rentalId) return null;
+  try {
+    const raw = localStorage.getItem(getRideTrackStorageKey(rentalId));
+    if (!raw) return null;
+
+    const points = JSON.parse(raw);
+    if (!Array.isArray(points) || points.length < 2) return null;
+
+    let meters = 0;
+    for (let i = 1; i < points.length; i += 1) {
+      const prev = points[i - 1];
+      const current = points[i];
+      const lat1 = Number(prev?.lat);
+      const lng1 = Number(prev?.lng);
+      const lat2 = Number(current?.lat);
+      const lng2 = Number(current?.lng);
+
+      if (
+        Number.isFinite(lat1) &&
+        Number.isFinite(lng1) &&
+        Number.isFinite(lat2) &&
+        Number.isFinite(lng2)
+      ) {
+        meters += haversineMeters(lat1, lng1, lat2, lng2);
+      }
+    }
+
+    return meters > 0 ? (meters / 1000).toFixed(2) : null;
+  } catch {
+    return null;
+  }
+};
+
 const ManageRentals = () => {
   const navigate = useNavigate();
-  const { activeRentals, activateReservation, cancelReservation } =
+  const { activeRentals, activateReservation, cancelReservation, fetchBikes } =
     useBikeStore();
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  useEffect(() => {
+    fetchBikes();
+  }, [fetchBikes]);
 
   // Live ticking clock for tracking
   useEffect(() => {
@@ -60,10 +115,9 @@ const ManageRentals = () => {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const calculateSimulatedDistance = (totalSeconds) => {
-    // Assume an average biking speed of 15 km/h
-    const speedKmsPerSecond = 15 / 3600;
-    return (totalSeconds * speedKmsPerSecond).toFixed(2);
+  const formatGpsDistance = (rentalId) => {
+    const tracked = getTrackedDistanceKm(rentalId);
+    return tracked || "0.00";
   };
 
   const getRemainingSeconds = (reservationEndsAt) => {
@@ -94,7 +148,7 @@ const ManageRentals = () => {
             {activeRides.map((rental) => {
               const elapsedSeconds = getElapsedSeconds(rental.startTime);
               const activeDuration = formatDuration(elapsedSeconds);
-              const activeDistance = calculateSimulatedDistance(elapsedSeconds);
+              const activeDistance = formatGpsDistance(rental.id);
 
               return (
                 <div

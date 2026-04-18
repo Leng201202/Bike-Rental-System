@@ -1,428 +1,284 @@
 import { create } from "zustand";
-import api from "../api/api";
-import { normalizeBike, getBikeImageUrl } from "../utils/bikeData";
+import api, { getApiErrorMessage, unwrapApiResponse } from "../api/api";
+import { getBikeImageUrl, normalizeBike } from "../utils/bikeData";
+import useAuthStore from "./useAuthStore";
 
-const RESERVATION_WINDOW_MINUTES = 30;
-const reservationTimers = new Map();
-
-const clearReservationTimer = (rentalId) => {
-  const timer = reservationTimers.get(rentalId);
-  if (timer) {
-    clearTimeout(timer);
-    reservationTimers.delete(rentalId);
-  }
+const toRentalDuration = (seconds = 0) => {
+  const total = Number(seconds) || 0;
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  return `${h}h ${m}m`;
 };
 
-const scheduleReservationTimeout = (rentalId, reservationEndsAt, set) => {
-  clearReservationTimer(rentalId);
-  const delay = Math.max(0, new Date(reservationEndsAt).getTime() - Date.now());
-
-  const timer = setTimeout(() => {
-    set((state) => {
-      const reservation = state.activeRentals.find((r) => r.id === rentalId);
-      if (!reservation || reservation.status !== "RESERVED") {
-        return state;
-      }
-
-      if (new Date(reservation.reservationEndsAt).getTime() > Date.now()) {
-        return state;
-      }
-
-      return {
-        activeRentals: state.activeRentals.filter((r) => r.id !== rentalId),
-        bikes: state.bikes.map((bike) =>
-          bike.id === reservation.bikeId
-            ? { ...bike, status: "AVAILABLE" }
-            : bike,
-        ),
-      };
-    });
-    reservationTimers.delete(rentalId);
-  }, delay);
-
-  reservationTimers.set(rentalId, timer);
+const mapRentalToUi = (rental, bikeMap) => {
+  const bike = bikeMap.get(rental.bikeId);
+  return {
+    id: rental.id,
+    bikeId: rental.bikeId,
+    bikeName: bike?.name || `Bike #${rental.bikeId}`,
+    bikeImage: getBikeImageUrl(bike),
+    bikeType: bike?.type || "CITY",
+    startTime: rental.startedAt,
+    currentCost: Number(rental.totalCost ?? 0),
+    method: rental.method,
+    status: rental.status,
+    lat: bike?.location?.lat || 20.046,
+    lng: bike?.location?.lng || 99.8943,
+    distanceKm: Number(rental.distanceKm ?? 0),
+    durationSeconds: Number(rental.durationSeconds ?? 0),
+    route: null,
+  };
 };
 
-const mockBikes = [
-  {
-    id: 1,
-    name: "Mountain Explorer X1",
-    type: "MOUNTAIN",
-    status: "AVAILABLE",
-    pricePerHour: 20,
-    pricePerKm: 2.0,
-    imageUrl:
-      "https://images.unsplash.com/photo-1532298229144-0ee05051da69?auto=format&fit=crop&q=80&w=800",
-    description: "Rugged and reliable for off-road campus trails.",
-    location: { lat: 20.0494, lng: 99.893, zone: "North Gate" },
-  },
-  {
-    id: 2,
-    name: "City Cruiser v2",
-    type: "ROAD",
-    status: "RENTED",
-    pricePerHour: 15,
-    pricePerKm: 2.0,
-    imageUrl:
-      "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&q=80&w=800",
-    description: "The perfect companion for a smooth cross-campus commute.",
-    location: { lat: 20.0461, lng: 99.8949, zone: "Library Central" },
-  },
-  {
-    id: 3,
-    name: "Electric Spark S5",
-    type: "ELECTRIC",
-    status: "AVAILABLE",
-    pricePerHour: 35,
-    pricePerKm: 2.0,
-    imageUrl:
-      "https://images.unsplash.com/photo-1571333250630-f0230c320b6d?auto=format&fit=crop&q=80&w=800",
-    description: "Get there faster with zero effort and maximum style.",
-    location: { lat: 20.0442, lng: 99.8961, zone: "Science Hub" },
-  },
-  {
-    id: 4,
-    name: "Road Master Pro",
-    type: "ROAD",
-    status: "AVAILABLE",
-    pricePerHour: 25,
-    pricePerKm: 2.0,
-    imageUrl:
-      "https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?auto=format&fit=crop&q=80&w=800",
-    description: "Lightweight frame for high-speed campus travel.",
-    location: { lat: 20.0475, lng: 99.8968, zone: "Engineering Plaza" },
-  },
-  {
-    id: 5,
-    name: "Trail Blazer",
-    type: "MOUNTAIN",
-    status: "AVAILABLE",
-    pricePerHour: 30,
-    pricePerKm: 2.0,
-    imageUrl:
-      "https://images.unsplash.com/photo-1544191696-102dbdaeeec6?auto=format&fit=crop&q=80&w=800",
-    description: "Tackle any terrain with advanced suspension.",
-    location: { lat: 20.0425, lng: 99.892, zone: "Student Dorms" },
-  },
-  {
-    id: 6,
-    name: "Urban Glide",
-    type: "CITY",
-    status: "MAINTENANCE",
-    pricePerHour: 10,
-    pricePerKm: 2.0,
-    imageUrl:
-      "https://images.unsplash.com/photo-1559348349-86f1f65817fe?auto=format&fit=crop&q=80&w=800",
-    description: "Simple, elegant, and ready for the city streets.",
-    location: { lat: 20.045, lng: 99.899, zone: "Sports Complex" },
-  },
-];
+const splitRentals = (rentals, bikes) => {
+  const bikeMap = new Map((bikes || []).map((bike) => [bike.id, bike]));
+  const normalized = (rentals || []).map((rental) => mapRentalToUi(rental, bikeMap));
 
-const useBikeStore = create((set) => ({
-  bikes: mockBikes.map(normalizeBike),
+  const activeRentals = normalized.filter(
+    (rental) => rental.status === "ACTIVE" || rental.status === "RESERVED",
+  );
+
+  const rentalHistory = normalized
+    .filter((rental) => rental.status === "COMPLETED")
+    .map((rental) => ({
+      id: rental.id,
+      bikeId: rental.bikeId,
+      bikeName: rental.bikeName,
+      date: rental.startTime ? new Date(rental.startTime).toISOString().split("T")[0] : "-",
+      duration: toRentalDuration(rental.durationSeconds),
+      totalCost: Number(rental.currentCost || 0),
+    }))
+    .sort((a, b) => (a.id < b.id ? 1 : -1));
+
+  return { activeRentals, rentalHistory };
+};
+
+const getCurrentUserId = () => useAuthStore.getState().user?.id;
+
+const useBikeStore = create((set, get) => ({
+  bikes: [],
   loading: false,
   error: null,
+  activeRentals: [],
+  rentalHistory: [],
 
-  activeRentals: [
-    {
-      id: 101,
-      bikeId: 3,
-      bikeName: "Electric Spark S5",
-      bikeImage:
-        "https://images.unsplash.com/photo-1571333250630-f0230c320b6d?auto=format&fit=crop&q=80&w=800",
-      bikeType: "ELECTRIC",
-      startTime: new Date(Date.now() - 3600000).toISOString(),
-      currentCost: 12.5,
-      method: "HOURLY",
-      status: "ACTIVE",
-      lat: 20.046, // MFU Chiang Rai
-      lng: 99.8943,
-    },
-  ],
-  rentalHistory: [
-    {
-      id: 98,
-      bikeId: 2,
-      bikeName: "City Cruiser v2",
-      date: "2026-02-18",
-      duration: "2h 15m",
-      totalCost: 7.85,
-    },
-    {
-      id: 95,
-      bikeId: 1,
-      bikeName: "Mountain Explorer X1",
-      date: "2026-02-15",
-      duration: "4h 0m",
-      totalCost: 22.0,
-    },
-  ],
+  syncUserRentals: async (userId) => {
+    if (!userId) {
+      set({ activeRentals: [], rentalHistory: [] });
+      return;
+    }
+
+    const rentals = unwrapApiResponse(await api.get(`/rentals/users/${userId}`));
+    const { activeRentals, rentalHistory } = splitRentals(rentals, get().bikes);
+    set({ activeRentals, rentalHistory });
+  },
 
   fetchBikes: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await api.get("/bikes");
-      const apiBikes = Array.isArray(response?.data) ? response.data : [];
+      const bikes = unwrapApiResponse(await api.get("/bikes"));
+      const normalizedBikes = (bikes || []).map(normalizeBike);
+      set({ bikes: normalizedBikes, loading: false });
 
-      if (apiBikes.length > 0) {
-        set({ bikes: apiBikes.map(normalizeBike), loading: false });
-        return;
+      const userId = getCurrentUserId();
+      if (userId) {
+        await get().syncUserRentals(userId);
       }
-
-      set({ bikes: mockBikes.map(normalizeBike), loading: false });
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error("fetchBikes failed, using mock fallback:", error);
-      }
-      set({ bikes: mockBikes.map(normalizeBike), error: "Failed to fetch bikes", loading: false });
+      set({
+        error: getApiErrorMessage(error, "Failed to fetch bikes"),
+        loading: false,
+      });
     }
   },
 
   rentBike: async (bikeId, method, rentalType = "IMMEDIATE") => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      const bike = useBikeStore.getState().bikes.find((b) => b.id === bikeId);
-      const now = Date.now();
-      const isReservation = rentalType === "RESERVE_30_MIN";
-      const reservationEndsAt = isReservation
-        ? new Date(now + RESERVATION_WINDOW_MINUTES * 60 * 1000).toISOString()
-        : null;
-
-      const newRental = {
-        id: Math.floor(Math.random() * 1000) + 200,
-        bikeId,
-        bikeName: bike.name,
-        bikeImage: getBikeImageUrl(bike),
-        bikeType: bike.type,
-        startTime: isReservation ? null : new Date(now).toISOString(),
-        currentCost: 0,
-        method, // 'HOURLY' or 'MILEAGE'
-        status: isReservation ? "RESERVED" : "ACTIVE",
-        reservedAt: isReservation ? new Date(now).toISOString() : null,
-        reservationEndsAt,
-        lat: 20.046 + (Math.random() - 0.5) * 0.005,
-        lng: 99.8943 + (Math.random() - 0.5) * 0.005,
-        // Mock route for MILEAGE method with MFU Chiang Rai Coordinates
-        route:
-          method === "MILEAGE"
-            ? [
-                { name: "M-Square Entrance", lat: 20.045, lng: 99.893 },
-                { name: "E3 Academic Center", lat: 20.0465, lng: 99.8945 },
-                { name: "C1 Dormitories", lat: 20.048, lng: 99.896 },
-                { name: "University Stadium", lat: 20.0495, lng: 99.8975 },
-              ]
-            : null,
-      };
-      set((state) => ({
-        activeRentals: [...state.activeRentals, newRental],
-        bikes: state.bikes.map((b) =>
-          b.id === bikeId
-            ? { ...b, status: isReservation ? "RESERVED" : "RENTED" }
-            : b,
-        ),
-        loading: false,
-      }));
-
-      if (isReservation) {
-        scheduleReservationTimeout(newRental.id, reservationEndsAt, set);
+      const userId = getCurrentUserId();
+      if (!userId) {
+        throw new Error("Please login as a rider first.");
       }
 
-      return {
-        success: true,
-        rental: newRental,
-      };
-    } catch {
-      set({ error: "Failed to rent bike", loading: false });
-      return {
-        success: false,
-      };
+      const rental = unwrapApiResponse(
+        await api.post("/rentals/start", {
+          userId,
+          bikeId,
+          method,
+          rentalType,
+        }),
+      );
+
+      await get().fetchBikes();
+      await get().syncUserRentals(userId);
+      set({ loading: false });
+
+      const createdRental = get().activeRentals.find((item) => item.id === rental.id);
+      return { success: true, rental: createdRental || rental };
+    } catch (error) {
+      set({
+        error: getApiErrorMessage(error, "Failed to rent bike"),
+        loading: false,
+      });
+      return { success: false };
     }
   },
 
   activateReservation: async (rentalId) => {
-    set({ loading: true });
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const reservation = useBikeStore
-        .getState()
-        .activeRentals.find((r) => r.id === rentalId);
-      if (!reservation || reservation.status !== "RESERVED") {
-        set({ loading: false });
-        return { success: false, reason: "NOT_FOUND" };
-      }
-
-      if (new Date(reservation.reservationEndsAt).getTime() <= Date.now()) {
-        clearReservationTimer(rentalId);
-        set((state) => ({
-          activeRentals: state.activeRentals.filter((r) => r.id !== rentalId),
-          bikes: state.bikes.map((bike) =>
-            bike.id === reservation.bikeId
-              ? { ...bike, status: "AVAILABLE" }
-              : bike,
-          ),
-          loading: false,
-        }));
-        return { success: false, reason: "EXPIRED" };
-      }
-
-      clearReservationTimer(rentalId);
-      set((state) => ({
-        activeRentals: state.activeRentals.map((r) =>
-          r.id === rentalId
-            ? {
-                ...r,
-                status: "ACTIVE",
-                startTime: new Date().toISOString(),
-                reservedAt: null,
-                reservationEndsAt: null,
-              }
-            : r,
-        ),
-        bikes: state.bikes.map((bike) =>
-          bike.id === reservation.bikeId ? { ...bike, status: "RENTED" } : bike,
-        ),
-        loading: false,
-      }));
-
-      return { success: true };
-    } catch {
-      set({ error: "Failed to activate reservation", loading: false });
-      return { success: false };
+    const reservation = get().activeRentals.find((rental) => rental.id === rentalId);
+    if (!reservation || reservation.status !== "RESERVED") {
+      return { success: false, reason: "NOT_FOUND" };
     }
+
+    set((state) => ({
+      activeRentals: state.activeRentals.map((rental) =>
+        rental.id === rentalId ? { ...rental, status: "ACTIVE", startTime: new Date().toISOString() } : rental,
+      ),
+    }));
+    return { success: true };
   },
 
   cancelReservation: async (rentalId) => {
-    set({ loading: true });
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      const reservation = useBikeStore
-        .getState()
-        .activeRentals.find((r) => r.id === rentalId);
-      if (!reservation || reservation.status !== "RESERVED") {
-        set({ loading: false });
-        return { success: false, reason: "NOT_FOUND" };
-      }
-
-      clearReservationTimer(rentalId);
-      set((state) => ({
-        activeRentals: state.activeRentals.filter((r) => r.id !== rentalId),
-        bikes: state.bikes.map((bike) =>
-          bike.id === reservation.bikeId
-            ? { ...bike, status: "AVAILABLE" }
-            : bike,
-        ),
-        loading: false,
-      }));
-
-      return { success: true };
-    } catch {
-      set({ error: "Failed to cancel reservation", loading: false });
-      return { success: false };
+    const reservation = get().activeRentals.find((rental) => rental.id === rentalId);
+    if (!reservation || reservation.status !== "RESERVED") {
+      return { success: false, reason: "NOT_FOUND" };
     }
+
+    set((state) => ({
+      activeRentals: state.activeRentals.filter((rental) => rental.id !== rentalId),
+      bikes: state.bikes.map((bike) =>
+        bike.id === reservation.bikeId ? { ...bike, status: "AVAILABLE" } : bike,
+      ),
+    }));
+
+    return { success: true };
   },
 
-  returnBike: async (rentalId, paymentDetails, finalLat, finalLng) => {
-    set({ loading: true });
+  returnBike: async (rentalId, paymentDetails, rideTelemetry = {}) => {
+    set({ loading: true, error: null });
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const rental = useBikeStore
-        .getState()
-        .activeRentals.find((r) => r.id === rentalId);
+      const userId = getCurrentUserId();
+      if (!userId) {
+        throw new Error("Please login as a rider first.");
+      }
+
+      const rental = get().activeRentals.find((item) => item.id === rentalId);
       if (!rental || rental.status !== "ACTIVE") {
         set({ loading: false });
         return false;
       }
-      const historyItem = {
-        id: rental.id,
-        bikeId: rental.bikeId,
-        bikeName: rental.bikeName,
-        date: new Date().toISOString().split("T")[0],
-        duration: "1h 20m", // Mock duration calculation
-        totalCost: rental.currentCost,
-      };
-      set((state) => ({
-        activeRentals: state.activeRentals.filter((r) => r.id !== rentalId),
-        rentalHistory: [historyItem, ...state.rentalHistory],
-        bikes: state.bikes.map((b) =>
-          b.id === rental.bikeId
-            ? {
-                ...b,
-                status: "AVAILABLE",
-                // Update location if coordinates were provided
-                location:
-                  finalLat && finalLng
-                    ? {
-                        ...b.location,
-                        lat: finalLat,
-                        lng: finalLng,
-                        zone: "Last Parked Location",
-                      }
-                    : b.location,
-              }
-            : b,
-        ),
-        loading: false,
-      }));
+
+      const fallbackDistance = Number(paymentDetails?.distanceKm || rental.distanceKm || 0);
+      const routePoints = Array.isArray(rideTelemetry?.routePoints)
+        ? rideTelemetry.routePoints
+            .map((point) => ({
+              lat: Number(point?.lat),
+              lng: Number(point?.lng),
+            }))
+            .filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng))
+        : [];
+
+      const endLat = Number(rideTelemetry?.finalLat);
+      const endLng = Number(rideTelemetry?.finalLng);
+
+      unwrapApiResponse(
+        await api.post(`/rentals/${rentalId}/end`, {
+          distanceKm: Number.isFinite(fallbackDistance) ? fallbackDistance : 0,
+          endLat: Number.isFinite(endLat) ? endLat : null,
+          endLng: Number.isFinite(endLng) ? endLng : null,
+          routePoints,
+        }),
+      );
+      unwrapApiResponse(
+        await api.post(`/payments/rentals/${rentalId}/pay`, {
+          userId,
+          method: "PROMPTPAY",
+        }),
+      );
+
+      await get().fetchBikes();
+      await get().syncUserRentals(userId);
+      set({ loading: false });
       return true;
-    } catch {
-      set({ error: "Failed to return bike", loading: false });
+    } catch (error) {
+      set({
+        error: getApiErrorMessage(error, "Failed to return bike"),
+        loading: false,
+      });
       return false;
     }
   },
 
   addBike: async (bikeData) => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const newBike = {
-        ...bikeData,
-        id:
-          Math.max(...mockBikes.map((b) => b.id), 0) +
-          Math.floor(Math.random() * 1000) +
-          7,
-      };
-      set((state) => ({
-        bikes: [...state.bikes, newBike],
-        loading: false,
-      }));
+      unwrapApiResponse(
+        await api.post("/bikes", {
+          name: bikeData.name,
+          type: bikeData.type,
+          status: bikeData.status,
+          pricePerHour: Number(bikeData.pricePerHour || 0),
+          pricePerKm: Number(bikeData.pricePerKm || 0),
+          currentZone: bikeData.currentZone || "Campus",
+          currentLat: bikeData.currentLat == null || bikeData.currentLat === "" ? null : Number(bikeData.currentLat),
+          currentLng: bikeData.currentLng == null || bikeData.currentLng === "" ? null : Number(bikeData.currentLng),
+          imageUrl: bikeData.imageUrl || null,
+          description: bikeData.description || null,
+        }),
+      );
+      await get().fetchBikes();
+      set({ loading: false });
       return true;
-    } catch {
-      set({ error: "Failed to add bike", loading: false });
+    } catch (error) {
+      set({
+        error: getApiErrorMessage(error, "Failed to add bike"),
+        loading: false,
+      });
       return false;
     }
   },
 
   updateBike: async (id, bikeData) => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      set((state) => ({
-        bikes: state.bikes.map((b) =>
-          b.id === id ? { ...b, ...bikeData } : b,
-        ),
-        loading: false,
-      }));
+      unwrapApiResponse(
+        await api.put(`/bikes/${id}`, {
+          name: bikeData.name,
+          type: bikeData.type,
+          status: bikeData.status,
+          pricePerHour: Number(bikeData.pricePerHour || 0),
+          pricePerKm: Number(bikeData.pricePerKm || 0),
+          currentZone: bikeData.currentZone || "Campus",
+          currentLat: bikeData.currentLat == null || bikeData.currentLat === "" ? null : Number(bikeData.currentLat),
+          currentLng: bikeData.currentLng == null || bikeData.currentLng === "" ? null : Number(bikeData.currentLng),
+          imageUrl: bikeData.imageUrl || null,
+          description: bikeData.description || null,
+        }),
+      );
+      await get().fetchBikes();
+      set({ loading: false });
       return true;
-    } catch {
-      set({ error: "Failed to update bike", loading: false });
+    } catch (error) {
+      set({
+        error: getApiErrorMessage(error, "Failed to update bike"),
+        loading: false,
+      });
       return false;
     }
   },
 
   deleteBike: async (id) => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      set((state) => ({
-        bikes: state.bikes.filter((bike) => bike.id !== id),
-        loading: false,
-      }));
+      unwrapApiResponse(await api.delete(`/bikes/${id}`));
+      await get().fetchBikes();
+      set({ loading: false });
       return true;
-    } catch {
-      set({ error: "Failed to delete bike", loading: false });
+    } catch (error) {
+      set({
+        error: getApiErrorMessage(error, "Failed to delete bike"),
+        loading: false,
+      });
       return false;
     }
   },

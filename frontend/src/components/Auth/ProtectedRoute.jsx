@@ -3,14 +3,14 @@ import { Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-    const { isAuthenticated, hasAgreedToTerms, user, loading } = useAuthStore();
+    const { isAuthenticated, hasAgreedToTerms, user, loading, hasCompletedStudentId } = useAuthStore();
     const location = useLocation();
 
     // Show nothing while checking auth state if needed
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#242424]">
-                <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+            <div className="min-h-screen flex items-center justify-center bg-[#F7F7F7]">
+                <div className="w-12 h-12 border-4 border-[#A94442]/20 border-t-[#8B2E2E] rounded-full animate-spin"></div>
             </div>
         );
     }
@@ -28,6 +28,14 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
         // Role not authorized, redirect to home or unauthorized page
         return <Navigate to="/" replace />;
+    }
+
+    const isRiderProtectedRoute = allowedRoles.includes('RIDER');
+    const isProfileTab = location.pathname === '/rider' && location.search.includes('tab=profile');
+    const studentIdCompleted = hasCompletedStudentId();
+
+    if (isRiderProtectedRoute && !studentIdCompleted && !isProfileTab) {
+        return <Navigate to="/rider?tab=profile" replace />;
     }
 
     return children;

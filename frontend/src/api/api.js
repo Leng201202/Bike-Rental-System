@@ -20,3 +20,19 @@ api.interceptors.request.use(
 );
 
 export default api;
+
+export const unwrapApiResponse = (response) => {
+    const payload = response?.data;
+    if (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'success')) {
+        if (!payload.success) {
+            const message = payload.error?.message || 'Request failed';
+            throw new Error(message);
+        }
+        return payload.data;
+    }
+    return payload;
+};
+
+export const getApiErrorMessage = (error, fallback = 'Request failed') => {
+    return error?.response?.data?.error?.message || error?.message || fallback;
+};

@@ -17,8 +17,8 @@ const Permissions = lazy(() => import('./pages/Auth/Permissions'));
 
 // Loading Fallback Component
 const LoadingFallback = () => (
-  <div className="flex h-screen items-center justify-center bg-[#242424]">
-    <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+  <div className="flex h-screen items-center justify-center bg-[#F7F7F7]">
+    <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#A94442] border-t-transparent"></div>
   </div>
 );
 
@@ -26,7 +26,7 @@ function App() {
   return (
     <BrowserRouter>
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="min-h-screen bg-[#242424] text-white selection:bg-blue-500/30 selection:text-blue-200">
+      <div className="min-h-screen bg-[#F7F7F7] text-[#2F2F2F] selection:bg-blue-500/30 selection:text-blue-200">
         {/* Navigation */}
         <Navbar />
 

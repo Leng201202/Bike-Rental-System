@@ -7,6 +7,31 @@ import RouteMap from '../../components/UI/RouteMap';
 import { showToast } from '../../components/UI/toast';
 import SafeBikeImage from '../../components/UI/SafeBikeImage';
 
+const getRideTrackStorageKey = (rentalId) => `ride-gps-track-${rentalId}`;
+
+const readRideTrack = (rentalId) => {
+    if (!rentalId) return [];
+    try {
+        const raw = localStorage.getItem(getRideTrackStorageKey(rentalId));
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed
+            .map((point) => ({
+                lat: Number(point?.lat),
+                lng: Number(point?.lng),
+            }))
+            .filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng));
+    } catch {
+        return [];
+    }
+};
+
+const clearRideTrack = (rentalId) => {
+    if (!rentalId) return;
+    localStorage.removeItem(getRideTrackStorageKey(rentalId));
+};
+
 const PaymentPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -47,10 +72,14 @@ const PaymentPage = () => {
         const success = await returnBike(
             rental.id,
             null,
-            userLocation?.lat,
-            userLocation?.lng
+            {
+                finalLat: userLocation?.lat,
+                finalLng: userLocation?.lng,
+                routePoints: readRideTrack(rental.id),
+            }
         );
         if (success) {
+            clearRideTrack(rental.id);
             setStep('SUCCESS');
         } else {
             showToast.error("Payment verification failed. Please try again.");

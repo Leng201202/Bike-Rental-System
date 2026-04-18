@@ -108,11 +108,11 @@ const RouteToBike = ({ userLoc, destination, onRouteInfoChange }) => {
     <>
       <Polyline
         positions={routeCoords}
-        pathOptions={{ color: "#38bdf8", weight: 10, opacity: 0.25 }}
+        pathOptions={{ color: "#F2CACA", weight: 10, opacity: 0.55 }}
       />
       <Polyline
         positions={routeCoords}
-        pathOptions={{ color: "#0ea5e9", weight: 5, opacity: 0.95 }}
+        pathOptions={{ color: "#8B2E2E", weight: 5, opacity: 0.95 }}
       />
     </>
   );
