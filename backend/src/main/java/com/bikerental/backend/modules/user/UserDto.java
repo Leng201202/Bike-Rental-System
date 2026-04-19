@@ -10,7 +10,8 @@ public record UserDto(
     String email,
     String phoneNumber,
     @JsonProperty("student_id") String studentId,
-    String role
+    String role,
+    @JsonProperty("is_active") boolean active
 ) {
 
     public static UserDto from(User user) {
@@ -21,7 +22,8 @@ public record UserDto(
             user.getEmail(),
             user.getPhoneNumber(),
             user.getStudentId(),
-            user.getRole().name()
+            user.getRole().name(),
+            user.isActive()
         );
     }
 }

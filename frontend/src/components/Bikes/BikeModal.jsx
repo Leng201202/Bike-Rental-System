@@ -64,21 +64,21 @@ const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) =>
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-[#1f1f1f] border border-gray-800 w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-10 relative animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/45 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#E5E7EB] w-full max-w-2xl rounded-2xl shadow-xl p-8 relative animate-in zoom-in-95 duration-300">
                 <button
                     onClick={onClose}
-                    className="absolute top-8 right-8 text-gray-500 hover:text-white transition-colors"
+                    className="absolute top-6 right-6 text-[#9CA3AF] hover:text-[#6B7280] transition-colors"
                 >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
 
-                <h2 className="text-3xl font-black mb-2 uppercase tracking-tight">
+                <h2 className="text-3xl font-semibold mb-2 tracking-tight text-[#2F2F2F]">
                     {bike ? 'Edit Bike Details' : 'Add New Bike'}
                 </h2>
-                <p className="text-gray-400 font-medium mb-10">
+                <p className="text-[#6B7280] font-medium mb-8">
                     {bike ? 'Update the specifications for this fleet unit.' : 'Register a new bike into the campus rental system.'}
                 </p>
 
@@ -92,9 +92,9 @@ const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) =>
                             required
                         />
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Bike Type</label>
+                            <label className="text-[11px] font-medium tracking-wide text-[#6B7280] ml-1">Bike Type</label>
                             <select
-                                className="w-full bg-black/20 border border-gray-800 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:border-blue-500 transition-all font-bold text-white appearance-none"
+                                className="w-full bg-white border border-[#D1D5DB] rounded-md px-4 py-3 text-sm focus:outline-none focus:border-[#8B2E2E] focus:ring-2 focus:ring-[#8B2E2E]/15 transition-all font-medium text-[#2F2F2F] appearance-none"
                                 value={formData.type}
                                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                             >
@@ -129,9 +129,9 @@ const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) =>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Initial Status</label>
+                            <label className="text-[11px] font-medium tracking-wide text-[#6B7280] ml-1">Initial Status</label>
                             <select
-                                className="w-full bg-black/20 border border-gray-800 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:border-blue-500 transition-all font-bold text-white appearance-none"
+                                className="w-full bg-white border border-[#D1D5DB] rounded-md px-4 py-3 text-sm focus:outline-none focus:border-[#8B2E2E] focus:ring-2 focus:ring-[#8B2E2E]/15 transition-all font-medium text-[#2F2F2F] appearance-none"
                                 value={formData.status}
                                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                             >
@@ -173,7 +173,7 @@ const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) =>
                         <Button
                             type="button"
                             variant="outline"
-                            className="px-6 py-2 text-[10px] uppercase tracking-widest"
+                            className="px-5 py-2 text-xs font-medium tracking-wide"
                             onClick={handleDetectGps}
                         >
                             Use My GPS
@@ -189,9 +189,9 @@ const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) =>
                     />
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Description</label>
+                        <label className="text-[11px] font-medium tracking-wide text-[#6B7280] ml-1">Description</label>
                         <textarea
-                            className="w-full bg-black/20 border border-gray-800 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:border-blue-500 transition-all font-medium text-gray-300 min-h-[100px]"
+                            className="w-full bg-white border border-[#D1D5DB] rounded-md px-4 py-3 text-sm focus:outline-none focus:border-[#8B2E2E] focus:ring-2 focus:ring-[#8B2E2E]/15 transition-all font-medium text-[#374151] min-h-[100px]"
                             placeholder="Briefly describe this bike..."
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -202,7 +202,7 @@ const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) =>
                         <Button
                             type="button"
                             variant="outline"
-                            className="flex-1 py-4 uppercase tracking-widest text-xs"
+                            className="flex-1 py-3 text-sm font-medium"
                             onClick={onClose}
                         >
                             Cancel
@@ -210,7 +210,7 @@ const BikeModal = ({ isOpen, onClose, onSave, bike = null, loading = false }) =>
                         <Button
                             type="submit"
                             variant="primary"
-                            className="flex-1 py-4 uppercase tracking-widest text-xs"
+                            className="flex-1 py-3 text-sm font-medium"
                             loading={loading}
                         >
                             {bike ? 'Update Bike' : 'Register Bike'}

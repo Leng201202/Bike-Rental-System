@@ -7,6 +7,7 @@ import com.bikerental.backend.common.exception.DomainException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -63,6 +64,11 @@ public class UserService {
         }
 
         return createRider(request);
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> listUsers() {
+        return userRepository.findAll();
     }
 
     private String normalizeEmail(String email) {

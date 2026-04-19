@@ -21,6 +21,11 @@ const UserProfile = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        if (name === 'studentId' && user?.studentId) {
+            return;
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -137,11 +142,16 @@ const UserProfile = () => {
                                 name="studentId"
                                 value={formData.studentId}
                                 onChange={handleChange}
-                                disabled={!isEditing}
-                                readOnly={!isEditing}
+                                disabled={!isEditing || Boolean(user?.studentId)}
+                                readOnly={!isEditing || Boolean(user?.studentId)}
                                 placeholder="64XXXXXXXX"
                                 required={isEditing}
                             />
+                            {user?.studentId && (
+                                <p className="text-xs text-[#6B7280] -mt-4">
+                                    Student ID cannot be changed after it is set.
+                                </p>
+                            )}
                             <Input
                                 label="Phone Number"
                                 name="phoneNumber"

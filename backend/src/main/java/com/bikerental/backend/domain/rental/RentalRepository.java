@@ -12,4 +12,6 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
     Optional<Rental> findByUserIdAndStatusIn(Long userId, List<RentalStatus> statuses);
 
     List<Rental> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+    List<Rental> findAllByOrderByCreatedAtDesc();
 }

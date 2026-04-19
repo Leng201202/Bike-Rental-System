@@ -71,7 +71,7 @@ const PermissionAgreement = ({ onComplete, initialPermissions = {} }) => {
 
             <button
                 onClick={handleProceed}
-                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black rounded-2xl shadow-xl shadow-blue-500/20 transform transition-all active:scale-[0.98] mt-4 uppercase tracking-widest text-xs"
+                className="w-full py-3 bg-[#8B2E2E] hover:bg-[#6F2323] text-white font-semibold rounded-md transition-colors active:scale-[0.98] mt-2 text-sm"
             >
                 Continue
             </button>

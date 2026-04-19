@@ -50,13 +50,13 @@ const LiveTracking = () => {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 h-full flex flex-col">
             <header className="mb-12">
-                <h1 className="text-4xl font-black mb-2 uppercase tracking-tight">Live Fleet Tracking</h1>
-                <p className="text-gray-400 font-medium">Mae Fah Luang University - Real-time GPS Oversight.</p>
+                <h1 className="text-4xl font-semibold mb-2 tracking-tight text-[#2F2F2F]">Live Fleet Tracking</h1>
+                <p className="text-[#6B7280] font-medium">Mae Fah Luang University - Real-time GPS oversight.</p>
             </header>
 
             <div className="flex-1 flex gap-8 min-h-[600px] mb-8">
                 {/* Map View */}
-                <div className="flex-1 bg-gray-900/40 border border-gray-700/30 rounded-[2.5rem] relative overflow-hidden backdrop-blur-xl shadow-2xl z-0">
+                <div className="flex-1 bg-white border border-[#E5E7EB] rounded-2xl relative overflow-hidden shadow-sm z-0">
                     <MapContainer
                         center={mfuCenter}
                         zoom={16}
@@ -64,8 +64,8 @@ const LiveTracking = () => {
                         zoomControl={false}
                     >
                         <TileLayer
-                            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; OpenStreetMap contributors'
                         />
 
                         {selectedBike?.location?.lat && selectedBike?.location?.lng && (
@@ -86,11 +86,11 @@ const LiveTracking = () => {
                                         <div className="flex gap-3 mb-2">
                                             <SafeBikeImage bike={bike} className="w-10 h-10 rounded-lg object-cover" alt={bike.name} />
                                             <div>
-                                                <div className="font-black text-xs uppercase">{bike.name}</div>
-                                                <div className="text-[10px] text-blue-500 font-bold tracking-widest">{bike.status}</div>
+                                                <div className="font-semibold text-xs text-[#2F2F2F]">{bike.name}</div>
+                                                <div className="text-[10px] text-[#8B2E2E] font-semibold tracking-wide">{bike.status}</div>
                                             </div>
                                         </div>
-                                        <div className="text-[10px] text-gray-500 font-medium">Zone: {bike.location.zone}</div>
+                                        <div className="text-[10px] text-[#6B7280] font-medium">Zone: {bike.location.zone}</div>
                                     </div>
                                 </Popup>
                             </Marker>
@@ -99,7 +99,7 @@ const LiveTracking = () => {
 
                     {/* Map UI Overlays */}
                     <div className="absolute top-6 right-6 z-[1000] flex flex-col gap-2">
-                        <div className="px-4 py-2 bg-gray-900/80 backdrop-blur-md rounded-xl border border-white/10 text-[10px] font-black uppercase text-white tracking-widest">
+                        <div className="px-4 py-2 bg-white/95 rounded-md border border-[#E5E7EB] text-[10px] font-semibold uppercase text-[#8B2E2E] tracking-wide shadow-sm">
                             MFU CAMPUS ONLINE
                         </div>
                     </div>
@@ -108,8 +108,8 @@ const LiveTracking = () => {
                 {/* Bike List Sidebar */}
                 <div className="w-80 flex flex-col gap-4">
                     <Card className="flex-1 flex flex-col !p-0 overflow-hidden">
-                        <div className="p-6 border-b border-gray-700/50 bg-black/10">
-                            <h2 className="text-sm font-black uppercase tracking-widest text-gray-400">Bike Inventory</h2>
+                        <div className="p-6 border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                            <h2 className="text-sm font-semibold uppercase tracking-wide text-[#8B2E2E]">Bike Inventory</h2>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
                             {bikes.map(bike => (
@@ -117,20 +117,20 @@ const LiveTracking = () => {
                                     key={bike.id}
                                     onClick={() => setSelectedBike(bike)}
                                     className={`w-full p-4 rounded-2xl border transition-all text-left flex items-center justify-between group ${selectedBike?.id === bike.id
-                                            ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/20'
-                                            : 'bg-white/5 border-gray-700/30 hover:bg-white/10'
+                                            ? 'bg-[#FCEAEA] border-[#8B2E2E]'
+                                            : 'bg-white border-[#E5E7EB] hover:bg-[#FCFCFC]'
                                         }`}
                                 >
                                     <div>
-                                        <div className={`text-xs font-black uppercase transition-colors ${selectedBike?.id === bike.id ? 'text-white' : 'text-gray-300'}`}>
+                                        <div className={`text-xs font-semibold transition-colors ${selectedBike?.id === bike.id ? 'text-[#8B2E2E]' : 'text-[#2F2F2F]'}`}>
                                             {bike.name}
                                         </div>
-                                        <div className={`text-[10px] font-bold ${selectedBike?.id === bike.id ? 'text-blue-200' : 'text-gray-500'}`}>
+                                        <div className={`text-[10px] font-medium ${selectedBike?.id === bike.id ? 'text-[#8B2E2E]' : 'text-[#6B7280]'}`}>
                                             {bike.location.zone}
                                         </div>
                                     </div>
                                     <div className={`w-2 h-2 rounded-full ${bike.status === 'AVAILABLE' ? 'bg-green-500' :
-                                            bike.status === 'RENTED' ? 'bg-blue-400' : 'bg-gray-600'
+                                            bike.status === 'RENTED' ? 'bg-[#8B2E2E]' : 'bg-gray-500'
                                         }`}></div>
                                 </button>
                             ))}

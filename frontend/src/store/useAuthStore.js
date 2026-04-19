@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api, { getApiErrorMessage, unwrapApiResponse } from '../api/api';
+import useNotificationStore from './useNotificationStore';
 
 const buildDisplayUser = (backendUser, fallback = {}) => ({
     id: backendUser?.id,
@@ -86,6 +87,12 @@ const useAuthStore = create((set) => ({
                 isAuthenticated: true,
                 loading: false
             });
+
+            useNotificationStore.getState().notify({
+                title: 'Welcome Back',
+                message: role === 'ADMIN' ? 'Admin session is ready.' : 'Your rider account is now active.',
+                level: 'info',
+            });
             return true;
         } catch (error) {
             set({
@@ -102,7 +109,17 @@ const useAuthStore = create((set) => ({
             await new Promise(resolve => setTimeout(resolve, 800));
 
             set(state => {
-                const updatedUser = { ...state.user, ...profileData };
+                const currentStudentId = state.user?.studentId;
+                const incomingStudentId = String(
+                    profileData?.studentId ?? profileData?.student_id ?? ''
+                ).trim();
+                const resolvedStudentId = currentStudentId || incomingStudentId;
+
+                const updatedUser = {
+                    ...state.user,
+                    ...profileData,
+                    studentId: resolvedStudentId,
+                };
                 localStorage.setItem('auth_user', JSON.stringify(updatedUser));
                 return {
                     user: updatedUser,
@@ -124,6 +141,12 @@ const useAuthStore = create((set) => ({
                 user: { ...state.user, debt: Math.max(0, state.user.debt - amount) },
                 loading: false
             }));
+
+            useNotificationStore.getState().notify({
+                title: 'Debt Payment Confirmed',
+                message: 'Your outstanding debt has been updated successfully.',
+                level: 'success',
+            });
             return true;
         } catch {
             set({ error: 'Payment failed', loading: false });

@@ -6,6 +6,7 @@ import Card from '../../components/UI/Card';
 import RouteMap from '../../components/UI/RouteMap';
 import { showToast } from '../../components/UI/toast';
 import SafeBikeImage from '../../components/UI/SafeBikeImage';
+import { buildPromptPayQrUrl, getPromptPayAccount } from '../../utils/promptpay';
 
 const getRideTrackStorageKey = (rentalId) => `ride-gps-track-${rentalId}`;
 
@@ -38,6 +39,7 @@ const PaymentPage = () => {
     const { returnBike } = useBikeStore();
     const [step, setStep] = useState('CHECKOUT'); // CHECKOUT -> QR -> PROCESSING -> SUCCESS
     const [userLocation, setUserLocation] = useState(null);
+    const [transactionCode, setTransactionCode] = useState('');
 
     // Get rental data from navigation state
     const rental = location.state?.rental;
@@ -64,12 +66,19 @@ const PaymentPage = () => {
 
     if (!rental) return null;
 
+    const promptPayReference = `RENTAL-${rental.id}`;
+    const qrUrl = buildPromptPayQrUrl({
+        amount: rental.currentCost,
+        reference: promptPayReference,
+        size: 280,
+    });
+
     const handlePaymentConfirm = async () => {
         setStep('PROCESSING');
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        const success = await returnBike(
+        const result = await returnBike(
             rental.id,
             null,
             {
@@ -78,8 +87,9 @@ const PaymentPage = () => {
                 routePoints: readRideTrack(rental.id),
             }
         );
-        if (success) {
+        if (result?.success) {
             clearRideTrack(rental.id);
+            setTransactionCode(result?.payment?.transactionCode || '');
             setStep('SUCCESS');
         } else {
             showToast.error("Payment verification failed. Please try again.");
@@ -224,16 +234,12 @@ const PaymentPage = () => {
                         {step === 'QR' && (
                             <div className="animate-in zoom-in-95 duration-500 w-full">
                                 <h3 className="text-xl font-black text-white mb-8 uppercase tracking-widest">Scan QR Code</h3>
-                                <div className="bg-white p-4 rounded-3xl mb-10 inline-block relative overflow-hidden group">
-                                    <div className="w-56 h-56 bg-gray-50 flex items-center justify-center text-5xl relative">
-                                        📱
-                                        <div className="absolute inset-0 grid grid-cols-4 gap-2 p-6 opacity-10">
-                                            {Array.from({ length: 16 }).map((_, i) => (
-                                                <div key={i} className="bg-black rounded-sm"></div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="absolute left-4 right-4 h-0.5 bg-blue-500 top-4 animate-scan shadow-[0_0_15px_rgba(59,130,246,0.8)]"></div>
+                                <div className="bg-white p-4 rounded-3xl mb-6 inline-block relative overflow-hidden group">
+                                    <img src={qrUrl} alt="PromptPay QR" className="w-56 h-56 rounded-xl object-contain" />
+                                </div>
+                                <div className="mb-8 text-center">
+                                    <p className="text-[11px] font-medium text-gray-400">PromptPay account: {getPromptPayAccount()}</p>
+                                    <p className="text-[10px] font-bold text-blue-300 tracking-wide">Reference: {promptPayReference}</p>
                                 </div>
                                 <div className="space-y-4">
                                     <Button
@@ -241,7 +247,7 @@ const PaymentPage = () => {
                                         variant="primary"
                                         className="w-full py-5 rounded-2xl font-black uppercase text-xs tracking-widest"
                                     >
-                                        I've Paid Site-Wide
+                                        I Have Paid via PromptPay
                                     </Button>
                                     <button
                                         onClick={() => setStep('CHECKOUT')}
@@ -265,7 +271,10 @@ const PaymentPage = () => {
                             <div className="animate-in zoom-in-50 duration-700">
                                 <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 shadow-2xl shadow-green-500/20">✓</div>
                                 <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-2">Success!</h3>
-                                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-10">Your journey is complete.</p>
+                                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Your journey is complete.</p>
+                                {transactionCode && (
+                                    <p className="text-blue-300 text-xs font-semibold tracking-wide mb-10">Transaction: {transactionCode}</p>
+                                )}
                                 <Button
                                     onClick={() => navigate('/rider?tab=history')}
                                     variant="primary"

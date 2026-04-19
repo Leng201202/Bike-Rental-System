@@ -12,6 +12,7 @@ import com.bikerental.backend.domain.rental.RentalRepository;
 import com.bikerental.backend.domain.rental.RentalStatus;
 import com.bikerental.backend.domain.user.User;
 import com.bikerental.backend.domain.user.UserRepository;
+import com.bikerental.backend.modules.audit.AuditLogService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,17 +33,20 @@ public class RentalService {
     private final UserRepository userRepository;
     private final BikeRepository bikeRepository;
     private final DebtLedgerRepository debtLedgerRepository;
+    private final AuditLogService auditLogService;
 
     public RentalService(
         RentalRepository rentalRepository,
         UserRepository userRepository,
         BikeRepository bikeRepository,
-        DebtLedgerRepository debtLedgerRepository
+        DebtLedgerRepository debtLedgerRepository,
+        AuditLogService auditLogService
     ) {
         this.rentalRepository = rentalRepository;
         this.userRepository = userRepository;
         this.bikeRepository = bikeRepository;
         this.debtLedgerRepository = debtLedgerRepository;
+        this.auditLogService = auditLogService;
     }
 
     @Transactional
@@ -77,8 +81,16 @@ public class RentalService {
         rental.setStartLng(bike.getCurrentLng());
 
         bike.setStatus(BikeStatus.RENTED);
+        Rental saved = rentalRepository.save(rental);
+        auditLogService.log(
+            user.getId(),
+            "RENTAL_STARTED",
+            "RENTAL",
+            String.valueOf(saved.getId()),
+            "User started rental for bike " + bike.getId() + " using " + saved.getMethod().name()
+        );
 
-        return rentalRepository.save(rental);
+        return saved;
     }
 
     @Transactional
@@ -129,12 +141,25 @@ public class RentalService {
         charge.setNote("Rental charge");
         debtLedgerRepository.save(charge);
 
+        auditLogService.log(
+            rental.getUser().getId(),
+            "RENTAL_COMPLETED",
+            "RENTAL",
+            String.valueOf(rental.getId()),
+            "Rental ended with total cost THB " + totalCost
+        );
+
         return rental;
     }
 
     @Transactional(readOnly = true)
     public List<Rental> getUserRentals(Long userId) {
         return rentalRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Rental> listAllRentals() {
+        return rentalRepository.findAllByOrderByCreatedAtDesc();
     }
 
     private BigDecimal calculateCost(Rental rental) {

@@ -41,4 +41,12 @@ public class RentalController {
             .toList();
         return ApiResponse.ok(result);
     }
+
+    @GetMapping
+    public ApiResponse<List<RentalDto>> listAllRentals() {
+        List<RentalDto> result = rentalService.listAllRentals().stream()
+            .map(RentalDto::from)
+            .toList();
+        return ApiResponse.ok(result);
+    }
 }

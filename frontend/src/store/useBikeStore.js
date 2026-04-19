@@ -2,6 +2,7 @@ import { create } from "zustand";
 import api, { getApiErrorMessage, unwrapApiResponse } from "../api/api";
 import { getBikeImageUrl, normalizeBike } from "../utils/bikeData";
 import useAuthStore from "./useAuthStore";
+import useNotificationStore from "./useNotificationStore";
 
 const toRentalDuration = (seconds = 0) => {
   const total = Number(seconds) || 0;
@@ -113,6 +114,15 @@ const useBikeStore = create((set, get) => ({
       await get().syncUserRentals(userId);
       set({ loading: false });
 
+      useNotificationStore.getState().notify({
+        title: rentalType === "RESERVE_30_MIN" ? "Bike Reserved" : "Ride Started",
+        message:
+          rentalType === "RESERVE_30_MIN"
+            ? `Your bike has been reserved for 30 minutes.`
+            : `Your rental is active. Open Live Tracking to navigate.`,
+        level: "success",
+      });
+
       const createdRental = get().activeRentals.find((item) => item.id === rental.id);
       return { success: true, rental: createdRental || rental };
     } catch (error) {
@@ -165,7 +175,7 @@ const useBikeStore = create((set, get) => ({
       const rental = get().activeRentals.find((item) => item.id === rentalId);
       if (!rental || rental.status !== "ACTIVE") {
         set({ loading: false });
-        return false;
+        return { success: false };
       }
 
       const fallbackDistance = Number(paymentDetails?.distanceKm || rental.distanceKm || 0);
@@ -189,7 +199,7 @@ const useBikeStore = create((set, get) => ({
           routePoints,
         }),
       );
-      unwrapApiResponse(
+      const payment = unwrapApiResponse(
         await api.post(`/payments/rentals/${rentalId}/pay`, {
           userId,
           method: "PROMPTPAY",
@@ -199,13 +209,19 @@ const useBikeStore = create((set, get) => ({
       await get().fetchBikes();
       await get().syncUserRentals(userId);
       set({ loading: false });
-      return true;
+
+      useNotificationStore.getState().notify({
+        title: "Ride Completed",
+        message: `Bike returned and payment completed${payment?.transactionCode ? ` (${payment.transactionCode})` : ''}.`,
+        level: "success",
+      });
+      return { success: true, payment };
     } catch (error) {
       set({
         error: getApiErrorMessage(error, "Failed to return bike"),
         loading: false,
       });
-      return false;
+      return { success: false };
     }
   },
 

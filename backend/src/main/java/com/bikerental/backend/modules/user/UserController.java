@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -32,5 +34,13 @@ public class UserController {
     @GetMapping("/by-username/{username}")
     public ApiResponse<UserDto> getByUsername(@PathVariable String username) {
         return ApiResponse.ok(UserDto.from(userService.getByUsername(username)));
+    }
+
+    @GetMapping
+    public ApiResponse<List<UserDto>> listUsers() {
+        List<UserDto> result = userService.listUsers().stream()
+            .map(UserDto::from)
+            .toList();
+        return ApiResponse.ok(result);
     }
 }

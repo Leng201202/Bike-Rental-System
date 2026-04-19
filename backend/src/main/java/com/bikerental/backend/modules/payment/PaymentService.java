@@ -12,6 +12,7 @@ import com.bikerental.backend.domain.rental.RentalRepository;
 import com.bikerental.backend.domain.rental.RentalStatus;
 import com.bikerental.backend.domain.user.User;
 import com.bikerental.backend.domain.user.UserRepository;
+import com.bikerental.backend.modules.audit.AuditLogService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,17 +28,20 @@ public class PaymentService {
     private final RentalRepository rentalRepository;
     private final UserRepository userRepository;
     private final DebtLedgerRepository debtLedgerRepository;
+    private final AuditLogService auditLogService;
 
     public PaymentService(
         PaymentRepository paymentRepository,
         RentalRepository rentalRepository,
         UserRepository userRepository,
-        DebtLedgerRepository debtLedgerRepository
+        DebtLedgerRepository debtLedgerRepository,
+        AuditLogService auditLogService
     ) {
         this.paymentRepository = paymentRepository;
         this.rentalRepository = rentalRepository;
         this.userRepository = userRepository;
         this.debtLedgerRepository = debtLedgerRepository;
+        this.auditLogService = auditLogService;
     }
 
     @Transactional
@@ -77,6 +81,14 @@ public class PaymentService {
         paymentEntry.setNote("Rental payment");
         debtLedgerRepository.save(paymentEntry);
 
+        auditLogService.log(
+            user.getId(),
+            "PAYMENT_COMPLETED",
+            "PAYMENT",
+            String.valueOf(savedPayment.getId()),
+            "Payment " + savedPayment.getTransactionCode() + " completed for rental " + rental.getId()
+        );
+
         return savedPayment;
     }
 
@@ -90,5 +102,17 @@ public class PaymentService {
     @Transactional(readOnly = true)
     public List<Payment> listUserPayments(Long userId) {
         return paymentRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Payment> listAllPayments() {
+        return paymentRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserBalanceDto> listAllOutstandingBalances() {
+        return userRepository.findAll().stream()
+            .map(user -> new UserBalanceDto(user.getId(), debtLedgerRepository.getOutstandingBalance(user.getId())))
+            .toList();
     }
 }

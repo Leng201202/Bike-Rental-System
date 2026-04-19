@@ -14,7 +14,7 @@ const BikeCard = ({ bike, onRent, isOwner = false }) => {
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
         <div className="absolute top-6 left-6 flex gap-2">
-          <span className="px-4 py-1.5 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-white border border-white/10">
+          <span className="px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide text-[#8B2E2E] bg-[#FCEAEA] border border-[#F2CACA]">
             {bike.type}
           </span>
           <StatusBadge status={bike.status} />
@@ -23,19 +23,19 @@ const BikeCard = ({ bike, onRent, isOwner = false }) => {
 
       <div className="p-8">
         <div className="flex justify-between items-start mb-4">
-          <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors uppercase tracking-tight">
+          <h3 className="text-xl font-semibold text-[#2F2F2F] transition-colors tracking-tight">
             {bike.name}
           </h3>
           <div className="text-right">
-            <div className="text-xl font-black text-white">
+            <div className="text-xl font-semibold text-[#2F2F2F]">
               ฿{bike.pricePerHour}/hr
             </div>
-            <div className="text-sm font-bold text-blue-400">
+            <div className="text-sm font-semibold text-[#8B2E2E]">
               ฿{bike.pricePerKm || "2.0"}/km
             </div>
           </div>
         </div>
-        <p className="text-gray-400 text-sm leading-relaxed mb-8 font-medium italic line-clamp-2">
+        <p className="text-[#6B7280] text-sm leading-relaxed mb-8 font-medium line-clamp-2">
           "{bike.description}"
         </p>
 
@@ -44,7 +44,7 @@ const BikeCard = ({ bike, onRent, isOwner = false }) => {
             variant={bike.status === "AVAILABLE" ? "primary" : "outline"}
             onClick={() => onRent && onRent(bike)}
             disabled={bike.status !== "AVAILABLE"}
-            className="w-full py-4 uppercase tracking-widest text-xs"
+            className="w-full py-3 text-sm font-medium"
           >
             {bike.status === "AVAILABLE"
               ? "Rent This Bike"

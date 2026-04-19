@@ -9,21 +9,21 @@ const HomePage = () => {
   const { isAuthenticated } = useAuthStore();
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#F7F7F7]">
       <Hero isAuthenticated={isAuthenticated} />
       <Stats />
       <Features />
       <HowItWorks />
 
       {/* Footer */}
-      <footer className="py-12 border-t border-gray-800 text-center bg-black/20">
+      <footer className="py-12 border-t border-[#E5E7EB] text-center bg-white">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="font-bold text-xl text-blue-500 mb-4">BikeRental</div>
-          <p className="text-gray-500 text-sm mb-6">Built for students, by students. &copy; 2026 Campus Rides Inc.</p>
-          <div className="flex justify-center gap-8 text-sm text-gray-400">
-            <a href="#" className="hover:text-white transition">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition">Terms of Service</a>
-            <a href="#" className="hover:text-white transition">Support</a>
+          <div className="font-semibold text-xl text-[#8B2E2E] mb-3">MFU Bike Rental</div>
+          <p className="text-[#6B7280] text-sm mb-6">Built for students, by students. &copy; 2026 Mae Fah Luang University.</p>
+          <div className="flex justify-center gap-8 text-sm text-[#6B7280]">
+            <a href="#" className="hover:text-[#8B2E2E] transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-[#8B2E2E] transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-[#8B2E2E] transition-colors">Support</a>
           </div>
         </div>
       </footer>

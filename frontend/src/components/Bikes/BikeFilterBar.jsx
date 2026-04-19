@@ -10,14 +10,14 @@ const BikeFilterBar = ({ activeFilter, onChange }) => {
     ];
 
     return (
-        <div className="flex bg-gray-800/50 p-1.5 rounded-2xl border border-gray-700/50 backdrop-blur-xl overflow-x-auto no-scrollbar">
+        <div className="flex bg-white p-1.5 rounded-xl border border-[#E5E7EB] overflow-x-auto no-scrollbar">
             {categories.map((cat) => (
                 <button
                     key={cat.id}
                     onClick={() => onChange(cat.id)}
-                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${activeFilter === cat.id
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    className={`px-5 py-2.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${activeFilter === cat.id
+                            ? 'bg-[#8B2E2E] text-white'
+                            : 'text-[#4B5563] hover:text-[#8B2E2E] hover:bg-[#F9FAFB]'
                         }`}
                 >
                     {cat.label}

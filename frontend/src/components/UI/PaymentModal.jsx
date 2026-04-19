@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Button from './Button';
 import Card from './Card';
+import { buildPromptPayQrUrl, getPromptPayAccount } from '../../utils/promptpay';
 
 const PaymentModal = ({ isOpen, onClose, onConfirm, amount, title = "Complete Payment" }) => {
     const [isProcessing, setIsProcessing] = useState(false);
@@ -14,6 +15,13 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, title = "Complete Pa
     };
 
     if (!isOpen) return null;
+
+    const promptPayReference = useMemo(() => `DEBT-${Date.now()}`, []);
+    const qrUrl = buildPromptPayQrUrl({
+        amount,
+        reference: promptPayReference,
+        size: 240,
+    });
 
     const handleConfirm = async () => {
         setIsProcessing(true);
@@ -60,23 +68,13 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, amount, title = "Complete Pa
                             {amount.toFixed(2)}
                         </div>
 
-                        {/* QR Code Placeholder */}
+                        {/* PromptPay QR */}
                         <div className="bg-white p-6 rounded-xl mb-8 inline-block shadow-sm border border-[#E5E7EB] relative group">
-                            <div className="w-48 h-48 bg-gray-100 flex items-center justify-center relative">
-                                {/* Simulated QR Pattern */}
-                                <div className="grid grid-cols-4 gap-2 w-full h-full p-4 opacity-20">
-                                    {Array.from({ length: 16 }).map((_, i) => (
-                                        <div key={i} className="bg-black rounded-sm"></div>
-                                    ))}
-                                </div>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <div className="text-4xl mb-2">📱</div>
-                                    <div className="text-[10px] font-semibold text-black uppercase tracking-wide opacity-45">Scan to Pay</div>
-                                </div>
-                            </div>
-                            {/* Scanning line animation */}
-                            <div className="absolute left-6 right-6 h-0.5 bg-[#8B2E2E] top-6 animate-scan shadow-[0_0_12px_rgba(139,46,46,0.45)]"></div>
+                            <img src={qrUrl} alt="PromptPay QR" className="w-48 h-48 rounded-xl object-contain" />
                         </div>
+                        <p className="text-[11px] text-[#6B7280] font-medium mb-6">
+                            Account: {getPromptPayAccount()} | Ref: {promptPayReference}
+                        </p>
 
                         <div className="space-y-4">
                             <Button

@@ -41,4 +41,17 @@ public class PaymentController {
             .toList();
         return ApiResponse.ok(result);
     }
+
+    @GetMapping
+    public ApiResponse<List<PaymentDto>> listAllPayments() {
+        List<PaymentDto> result = paymentService.listAllPayments().stream()
+            .map(PaymentDto::from)
+            .toList();
+        return ApiResponse.ok(result);
+    }
+
+    @GetMapping("/balances")
+    public ApiResponse<List<UserBalanceDto>> listAllBalances() {
+        return ApiResponse.ok(paymentService.listAllOutstandingBalances());
+    }
 }
