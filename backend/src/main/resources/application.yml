@@ -6,9 +6,9 @@ spring:
     name: bike-rental-backend
 
   datasource:
-    url: ${DB_URL:${DATABASE_URL:jdbc:postgresql://localhost:5432/bike_rental}}
-    username: ${DB_USERNAME:${DATABASE_USER:${PGUSER:postgres}}}
-    password: ${DB_PASSWORD:${DATABASE_PASSWORD:${PGPASSWORD:}}}
+    url: ${SPRING_DATASOURCE_URL:${DATABASE_JDBC_URL:${DB_URL:jdbc:postgresql://localhost:5432/bike_rental}}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:${DATABASE_USER:${PGUSER:postgres}}}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:${DATABASE_PASSWORD:${PGPASSWORD:}}}}
     driver-class-name: org.postgresql.Driver
 
   jpa:
