@@ -19,6 +19,29 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
+// Clear stale session state when backend rejects an expired/unknown token.
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const status = error?.response?.status;
+        const requestUrl = String(error?.config?.url || '');
+        const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+        const hasToken = !!localStorage.getItem('token');
+
+        if ((status === 401 || status === 403) && hasToken && !isAuthEndpoint) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('auth_user');
+            localStorage.removeItem('hasAgreedToTerms');
+
+            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+                window.location.assign('/login');
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
+
 export default api;
 
 export const unwrapApiResponse = (response) => {
