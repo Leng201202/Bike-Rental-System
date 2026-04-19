@@ -87,8 +87,6 @@ const useAuthStore = create((set) => ({
     updateProfile: async (profileData) => {
         set({ loading: true, error: null });
         try {
-            await new Promise(resolve => setTimeout(resolve, 800));
-
             set(state => {
                 const currentStudentId = state.user?.studentId;
                 const incomingStudentId = String(
@@ -117,7 +115,6 @@ const useAuthStore = create((set) => ({
     payDebt: async (amount) => {
         set({ loading: true, error: null });
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate payment processing
             set(state => ({
                 user: { ...state.user, debt: Math.max(0, state.user.debt - amount) },
                 loading: false

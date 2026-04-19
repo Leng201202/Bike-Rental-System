@@ -109,8 +109,6 @@ const PaymentPage = () => {
         }
 
         setStep('PROCESSING');
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
 
         const result = await returnBike(
             rental.id,
