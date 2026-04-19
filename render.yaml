@@ -36,4 +36,6 @@ services:
     healthCheckPath: /
     envVars:
       - key: API_UPSTREAM
-        value: bike-rental-backend:8080
+        value: bike-rental-backend.onrender.com
+      - key: API_UPSTREAM_SCHEME
+        value: https
