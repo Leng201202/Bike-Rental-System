@@ -18,4 +18,4 @@ ENV API_UPSTREAM_SCHEME=http
 
 EXPOSE 80
 
-CMD ["/bin/sh", "-c", "envsubst '${API_UPSTREAM} ${API_UPSTREAM_SCHEME}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "set -eu; if printf '%s' \"${API_UPSTREAM}\" | grep -Eq '^https?://'; then API_UPSTREAM_SCHEME=$(printf '%s' \"${API_UPSTREAM}\" | sed -E 's#^(https?)://.*#\\1#'); API_UPSTREAM=$(printf '%s' \"${API_UPSTREAM}\" | sed -E 's#^https?://##' | sed -E 's#/.*$##'); fi; if printf '%s' \"${API_UPSTREAM_SCHEME}\" | grep -q '\\.'; then TMP_SCHEME=\"${API_UPSTREAM_SCHEME}\"; API_UPSTREAM_SCHEME=\"${API_UPSTREAM}\"; API_UPSTREAM=\"${TMP_SCHEME}\"; fi; if [ \"${API_UPSTREAM_SCHEME}\" != \"http\" ] && [ \"${API_UPSTREAM_SCHEME}\" != \"https\" ]; then API_UPSTREAM_SCHEME=http; fi; API_UPSTREAM=$(printf '%s' \"${API_UPSTREAM}\" | sed -E 's#^https?://##' | sed -E 's#/.*$##'); envsubst '${API_UPSTREAM} ${API_UPSTREAM_SCHEME}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
