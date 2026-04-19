@@ -32,3 +32,8 @@ management:
 logging:
   level:
     org.springframework.security: INFO
+
+app:
+  auth:
+    jwt-secret: ${JWT_SECRET:change-this-in-production-with-a-long-random-secret}
+    jwt-ttl-hours: ${JWT_TTL_HOURS:24}
