@@ -4,7 +4,7 @@ import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Card from '../../components/UI/Card';
 import PaymentModal from '../../components/UI/PaymentModal';
-import { showToast } from '../../components/UI/PremiumToast';
+import { showToast } from '../../components/UI/toast';
 
 const UserProfile = () => {
     const { user, updateProfile, payDebt, loading } = useAuthStore();
@@ -16,16 +16,27 @@ const UserProfile = () => {
         fullName: user?.fullName || '',
         email: user?.email || '',
         phoneNumber: user?.phoneNumber || '',
-        campusId: user?.campusId || '',
+        studentId: user?.studentId || '',
     });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        if (name === 'studentId' && user?.studentId) {
+            return;
+        }
+
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!formData.studentId?.trim()) {
+            showToast.error('Student ID is required to use rental features.');
+            return;
+        }
+
         const success = await updateProfile(formData);
         if (success) {
             showToast.success("Profile updated successfully!");
@@ -40,10 +51,12 @@ const UserProfile = () => {
             fullName: user?.fullName || '',
             email: user?.email || '',
             phoneNumber: user?.phoneNumber || '',
-            campusId: user?.campusId || '',
+            studentId: user?.studentId || '',
         });
         setIsEditing(false);
     };
+
+    const studentIdMissing = !user?.studentId;
 
     return (
         <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -94,6 +107,12 @@ const UserProfile = () => {
                     )}
                 </div>
 
+                {studentIdMissing && (
+                    <div className="mb-8 p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200 text-xs font-bold uppercase tracking-wide">
+                        Complete Student ID in profile settings to unlock bike rental, live tracking, and payment features.
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="relative z-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                         <div className="space-y-6">
@@ -119,14 +138,20 @@ const UserProfile = () => {
                         </div>
                         <div className="space-y-6">
                             <Input
-                                label="Campus ID"
-                                name="campusId"
-                                value={formData.campusId}
+                                label="Student ID"
+                                name="studentId"
+                                value={formData.studentId}
                                 onChange={handleChange}
-                                disabled={!isEditing}
-                                readOnly={!isEditing}
-                                placeholder="ST-XXXXX"
+                                disabled={!isEditing || Boolean(user?.studentId)}
+                                readOnly={!isEditing || Boolean(user?.studentId)}
+                                placeholder="64XXXXXXXX"
+                                required={isEditing}
                             />
+                            {user?.studentId && (
+                                <p className="text-xs text-[#6B7280] -mt-4">
+                                    Student ID cannot be changed after it is set.
+                                </p>
+                            )}
                             <Input
                                 label="Phone Number"
                                 name="phoneNumber"

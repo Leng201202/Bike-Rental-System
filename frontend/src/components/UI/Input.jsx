@@ -15,7 +15,7 @@ const Input = ({
     return (
         <div className={`w-full ${className}`}>
             {label && (
-                <label className="block text-sm font-semibold text-gray-300 mb-2 ml-1 uppercase tracking-wider">
+                <label className="block text-sm font-medium text-[#374151] mb-2">
                     {label}
                 </label>
             )}
@@ -28,12 +28,12 @@ const Input = ({
                 required={required}
                 readOnly={readOnly}
                 className={`
-                    w-full px-5 py-4 bg-gray-900/50 border rounded-2xl outline-none transition-all placeholder:text-gray-600 font-medium
-                    ${error ? 'border-red-500/50 focus:ring-red-500/40' : 'border-gray-700/50 focus:ring-blue-500/40 focus:border-blue-500 focus:ring-2'}
+                    w-full px-4 py-2.5 bg-white border rounded-md outline-none transition-all placeholder:text-[#9CA3AF] font-normal text-[#2F2F2F]
+                    ${error ? 'border-[#B91C1C] focus:ring-[#B91C1C]/20' : 'border-[#D1D5DB] focus:ring-[#8B2E2E]/15 focus:border-[#8B2E2E] focus:ring-2'}
                 `}
             />
             {error && (
-                <p className="mt-2 ml-1 text-xs font-bold text-red-400 uppercase tracking-tight">
+                <p className="mt-1 text-xs font-medium text-[#B91C1C]">
                     {error}
                 </p>
             )}

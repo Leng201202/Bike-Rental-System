@@ -1,19 +1,22 @@
-import React from 'react';
+import React from "react";
 
 const StatusBadge = ({ status, className = "" }) => {
-    const config = {
-        AVAILABLE: 'bg-green-500/20 text-green-400 border-green-500/30',
-        RENTED: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-        MAINTENANCE: 'bg-red-500/20 text-red-400 border-red-500/30',
-        COMPLETED: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-        CANCELLED: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
-    };
+  const config = {
+    AVAILABLE: "bg-[#EAF6EE] text-[#1E7A3E] border-[#BFDCC8]",
+    RENTED: "bg-[#FEF6E8] text-[#9A6700] border-[#E6D0A6]",
+    RESERVED: "bg-[#FEF3EC] text-[#A75A10] border-[#E8C8A9]",
+    MAINTENANCE: "bg-[#FCEAEA] text-[#8B2E2E] border-[#E5BBBB]",
+    COMPLETED: "bg-[#F5F5F5] text-[#374151] border-[#D1D5DB]",
+    CANCELLED: "bg-[#F5F5F5] text-[#6B7280] border-[#D1D5DB]",
+  };
 
-    return (
-        <span className={`px-4 py-1.5 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${config[status] || config.CANCELLED} ${className}`}>
-            {status.replace('_', ' ')}
-        </span>
-    );
+  return (
+    <span
+      className={`px-3 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide border transition-colors ${config[status] || config.CANCELLED} ${className}`}
+    >
+      {status.replace("_", " ")}
+    </span>
+  );
 };
 
 export default StatusBadge;

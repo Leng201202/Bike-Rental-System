@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Section from '../../components/UI/Section';
-import Button from '../../components/UI/Button';
 
 const HowItWorks = () => {
     const steps = [
@@ -12,26 +11,26 @@ const HowItWorks = () => {
 
     return (
         <Section>
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[3rem] p-12 md:p-20 flex flex-col md:flex-row items-center gap-12 overflow-hidden relative shadow-3xl shadow-blue-500/20">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+            <div className="bg-[#8B2E2E] rounded-2xl p-10 md:p-14 flex flex-col md:flex-row items-center gap-10 overflow-hidden relative shadow-lg">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffffff14] rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
 
                 <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white leading-tight">Ready to get rolling?</h2>
-                    <p className="text-blue-100/80 text-lg mb-8 max-w-md">Join thousands of students who have already simplified their daily commute.</p>
+                    <h2 className="text-3xl md:text-4xl font-semibold mb-5 text-white leading-tight">Ready to start your ride?</h2>
+                    <p className="text-[#FDE8E8] text-base mb-8 max-w-md">Create your account and start renting bikes across campus in just a few steps.</p>
                     <Link to="/register">
-                        <button className="px-10 py-5 bg-white text-blue-600 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all shadow-xl shadow-black/20 transform hover:scale-105 active:scale-95">
-                            Get Started Now
+                        <button className="px-8 py-3 bg-white text-[#8B2E2E] rounded-md font-semibold text-base hover:bg-[#F9FAFB] transition-colors">
+                            Get Started
                         </button>
                     </Link>
                 </div>
 
                 <div className="flex-1 w-full grid grid-cols-1 gap-6">
                     {steps.map((item, i) => (
-                        <div key={i} className="flex gap-6 items-start bg-white/10 backdrop-blur-lg p-6 rounded-2xl border border-white/10 hover:bg-white/20 transition-all group">
-                            <div className="text-2xl font-black text-white/40 group-hover:text-white/80 transition-colors uppercase tracking-widest">{item.step}</div>
+                        <div key={i} className="flex gap-5 items-start bg-[#A63A3A] p-5 rounded-xl border border-[#C75B5B] transition-colors">
+                            <div className="text-xl font-semibold text-[#FDE8E8] uppercase tracking-wide">{item.step}</div>
                             <div>
-                                <h4 className="font-bold text-white mb-1 uppercase tracking-wider">{item.title}</h4>
-                                <p className="text-sm text-blue-100/70 leading-relaxed font-medium">{item.desc}</p>
+                                <h4 className="font-semibold text-white mb-1 tracking-wide">{item.title}</h4>
+                                <p className="text-sm text-[#FDE8E8] leading-relaxed font-medium">{item.desc}</p>
                             </div>
                         </div>
                     ))}

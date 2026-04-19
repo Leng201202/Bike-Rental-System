@@ -27,13 +27,13 @@ const UserDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen py-12 px-4 max-w-7xl mx-auto">
+        <div className="min-h-screen py-8 px-4 max-w-7xl mx-auto">
             <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <h1 className="text-4xl font-black mb-2 animate-in slide-in-from-left duration-700">
+                    <h1 className="text-3xl font-semibold mb-2 animate-in slide-in-from-left duration-700 text-[#2F2F2F]">
                         {user?.fullName ? `Welcome, ${user.fullName.split(' ')[0]}` : 'Rider Dashboard'}
                     </h1>
-                    <p className="text-gray-400 font-medium italic">
+                    <p className="text-[#6B7280] font-medium">
                         {activeTab === 'bikes' && "Choose your perfect ride for the day."}
                         {activeTab === 'manage' && "Manage your active rentals and returns."}
                         {activeTab === 'history' && "Review your past rentals and spendings."}
@@ -42,8 +42,14 @@ const UserDashboard = () => {
                 </div>
             </header>
 
+            {!user?.studentId && (
+                <div className="mb-8 p-4 rounded-md border border-[#E9D7B3] bg-[#FDF7EA] text-[#8A6A2B] text-xs font-semibold tracking-wide">
+                    Student ID is required before accessing rental, map, payment, and history features. Please complete it in Profile.
+                </div>
+            )}
+
             {/* Tab Content */}
-            <div className="min-h-[400px]">
+            <div className="min-h-100">
                 {renderContent()}
             </div>
         </div>

@@ -1,13 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --color-primary: #8b2e2e;
+  --color-primary-dark: #6f2323;
+  --color-primary-light: #a94442;
+  --color-accent-gold: #c8a96b;
+  --color-surface: #ffffff;
+  --color-background: #f7f7f7;
+  --color-border: #e5e5e5;
+  --color-text-main: #2f2f2f;
+  --color-text-muted: #6b7280;
+}
+
+@theme {
+  --color-primary: #8b2e2e;
+  --color-primary-dark: #6f2323;
+  --color-primary-light: #a94442;
+  --color-accent-gold: #c8a96b;
+  --color-surface: #ffffff;
+  --color-background: #f7f7f7;
+  --color-border: #e5e5e5;
+  --color-text-main: #2f2f2f;
+  --color-text-muted: #6b7280;
+}
+
+:root {
+  font-family: Inter, Roboto, "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: light;
+  color: var(--color-text-main);
+  background-color: var(--color-background);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -19,11 +42,50 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #242424;
+  background-color: var(--color-background);
+  color: var(--color-text-main);
 }
 
 #root {
   width: 100%;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+table {
+  border-collapse: collapse;
+}
+
+table thead tr {
+  background-color: var(--color-primary) !important;
+  color: #ffffff !important;
+}
+
+table tbody tr {
+  background-color: var(--color-surface);
+}
+
+table th,
+table td {
+  border-color: var(--color-border) !important;
+}
+
+::selection {
+  background-color: rgba(139, 46, 46, 0.16);
+  color: #2f2f2f;
+}
+
+.mfu-panel {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.mfu-title {
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 /* Global Animations */

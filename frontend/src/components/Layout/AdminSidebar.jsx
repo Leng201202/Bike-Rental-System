@@ -1,4 +1,15 @@
 import React from 'react';
+import {
+    Bike,
+    ClipboardList,
+    CreditCard,
+    Gauge,
+    LogOut,
+    MapPin,
+    Shield,
+    UserRound,
+    UsersRound
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 
@@ -7,13 +18,13 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
     const navigate = useNavigate();
 
     const menuItems = [
-        { id: 'fleet', label: 'Bike Management', icon: '🚲' },
-        { id: 'tracking', label: 'Live Tracking', icon: '📍' },
-        { id: 'users', label: 'User Management', icon: '👥' },
-        { id: 'payments', label: 'Payments', icon: '💰' },
-        { id: 'debt', label: 'Debt Management', icon: '💸' },
-        { id: 'logs', label: 'Audit Logs', icon: '📋' },
-        { id: 'profile', label: 'Admin Profile', icon: '👤' },
+        { id: 'fleet', label: 'Bike Inventory', icon: Bike },
+        { id: 'tracking', label: 'Live Tracking', icon: MapPin },
+        { id: 'users', label: 'User Management', icon: UsersRound },
+        { id: 'payments', label: 'Payments', icon: CreditCard },
+        { id: 'debt', label: 'Debt Ledger', icon: Gauge },
+        { id: 'logs', label: 'Audit Logs', icon: ClipboardList },
+        { id: 'profile', label: 'Admin Profile', icon: UserRound },
     ];
 
     const handleLogout = () => {
@@ -22,44 +33,53 @@ const AdminSidebar = ({ activeTab, setActiveTab }) => {
     };
 
     return (
-        <aside className="w-72 bg-gray-900/50 backdrop-blur-2xl border-r border-gray-800 flex flex-col h-screen sticky top-0 overflow-y-auto no-scrollbar">
-            <div className="p-8">
-                <div className="text-2xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent mb-10">
-                    BikeAdmin
-                </div>
+        <aside className="w-72 bg-white border-r border-[#E5E5E5] flex flex-col h-screen sticky top-0 overflow-y-auto no-scrollbar">
+            <div className="px-6 py-5 bg-[#8B2E2E] border-b border-[#7A2626]">
+                <div className="text-[11px] font-semibold tracking-[0.2em] text-[#FDE8E8] uppercase mb-1">Mae Fah Luang University</div>
+                <div className="text-base font-semibold text-white">Bike Rental Administration</div>
+            </div>
+
+            <div className="p-6">
 
                 <nav className="space-y-2">
                     {menuItems.map((item) => (
                         <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
-                            className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold transition-all ${activeTab === item.id
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors relative ${activeTab === item.id
+                                ? 'bg-[#FCEAEA] text-[#8B2E2E]'
+                                : 'text-[#4B5563] hover:text-[#8B2E2E] hover:bg-[#F9FAFB]'
                                 }`}
                         >
-                            <span className="text-xl">{item.icon}</span>
+                            {activeTab === item.id && (
+                                <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r bg-[#8B2E2E]" />
+                            )}
+                            <item.icon className={`w-4 h-4 ${activeTab === item.id ? 'text-[#8B2E2E]' : 'text-[#6B7280]'}`} />
                             {item.label}
                         </button>
                     ))}
                 </nav>
             </div>
 
-            <div className="mt-auto p-8 border-t border-gray-800/50">
-                <div className="flex items-center gap-4 mb-6 px-2">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white">
+            <div className="mt-auto p-6 border-t border-[#E5E5E5]">
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="w-9 h-9 rounded-md bg-[#FCEAEA] border border-[#F2CACA] text-[#8B2E2E] font-semibold flex items-center justify-center">
                         {user?.username?.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <div className="text-sm font-bold text-white">{user?.username}</div>
-                        <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Administrator</div>
+                        <div className="text-sm font-medium text-[#2F2F2F]">{user?.username}</div>
+                        <div className="text-xs text-[#6B7280] flex items-center gap-1">
+                            <Shield className="w-3.5 h-3.5" />
+                            Administrator
+                        </div>
                     </div>
                 </div>
+
                 <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold text-red-400 hover:text-red-300 hover:bg-red-400/5 transition-all"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium text-[#8B2E2E] border border-[#8B2E2E] hover:bg-[#FCEAEA] transition-colors"
                 >
-                    <span className="text-xl">🚪</span>
+                    <LogOut className="w-4 h-4" />
                     Log Out
                 </button>
             </div>

@@ -17,3 +17,23 @@ services:
         value: prod
       - key: SERVER_PORT
         value: "8080"
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+  # ── Frontend: React + Nginx ──
+  - type: web
+    name: bike-rental-frontend
+    runtime: docker
+    repo: https://github.com/Leng201202/Bike-Rental-System
+    dockerfilePath: frontend/Dockerfile
+    dockerContext: frontend
+    branch: main
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: API_UPSTREAM
+        value: bike-rental-backend:8080

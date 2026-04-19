@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
-import { showToast } from '../../components/UI/PremiumToast';
+import { showToast } from '../../components/UI/toast';
 import Input from '../../components/UI/Input';
 import Button from '../../components/UI/Button';
 
 function Login() {
     const [credentials, setCredentials] = useState({
-        username: '',
+        identifier: '',
         password: ''
     });
-    const { login, loading, error } = useAuthStore();
+    const { login, loading } = useAuthStore();
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -31,26 +31,22 @@ function Login() {
     };
 
     return (
-        <div className="min-h-[calc(100vh-65px)] flex items-center justify-center px-4 relative overflow-hidden">
-            <div className="absolute top-0 -left-20 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-10 animate-pulse"></div>
-            <div className="absolute bottom-0 -right-20 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-10 animate-pulse"></div>
+        <div className="min-h-[calc(100vh-65px)] flex items-center justify-center px-4 py-10 bg-[#F7F7F7]">
 
             <div className="w-full max-w-md relative z-10">
-                <div className="bg-gray-800/40 backdrop-blur-2xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
+                <div className="bg-white p-8 rounded-lg border border-[#E5E5E5] shadow-sm">
                     <div className="text-center mb-10">
-                        <h2 className="text-4xl font-black bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-                            Welcome Back
-                        </h2>
-                        <p className="text-gray-400 mt-3 font-medium">Log in to continue your ride</p>
+                        <h2 className="text-3xl font-semibold text-[#8B2E2E]">User Login</h2>
+                        <p className="text-[#6B7280] mt-2 font-medium">Log in to access bike rental services</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <Input
-                            label="Username"
-                            name="username"
-                            value={credentials.username}
+                            label="Student ID"
+                            name="identifier"
+                            value={credentials.identifier}
                             onChange={handleChange}
-                            placeholder="Enter your username"
+                            placeholder="64XXXXXXXX"
                             required
                         />
 
@@ -74,9 +70,9 @@ function Login() {
                     </form>
 
                     <div className="mt-10 text-center">
-                        <p className="text-gray-400 font-medium">
+                        <p className="text-[#6B7280] font-medium">
                             New here?{' '}
-                            <Link to="/register" className="text-blue-400 hover:text-blue-300 font-bold transition-all border-b border-blue-400/30 hover:border-blue-300">
+                            <Link to="/register" className="text-[#8B2E2E] hover:text-[#6F2323] font-semibold transition-colors border-b border-[#D9A5A5] hover:border-[#8B2E2E]">
                                 Create Account
                             </Link>
                         </p>

@@ -10,14 +10,14 @@ const Stats = () => {
     ];
 
     return (
-        <Section padding="py-12" className="border-y border-gray-800 bg-gray-900/30">
+        <Section padding="py-12" className="border-y border-[#E5E7EB] bg-[#F9FAFB]">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 {stats.map((stat, i) => (
                     <div key={i} className="text-center group">
-                        <div className="text-3xl font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">
+                        <div className="text-3xl font-semibold text-[#8B2E2E] mb-1">
                             {stat.value}
                         </div>
-                        <div className="text-gray-500 text-sm uppercase tracking-wider">
+                        <div className="text-[#6B7280] text-sm uppercase tracking-wide">
                             {stat.label}
                         </div>
                     </div>

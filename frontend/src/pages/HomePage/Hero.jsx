@@ -4,34 +4,37 @@ import Button from '../../components/UI/Button';
 
 const Hero = ({ isAuthenticated }) => {
     return (
-        <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
-            <div className="absolute top-0 -left-20 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-30 animate-blob"></div>
-            <div className="absolute top-0 -right-20 w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-30 animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-30 animate-blob animation-delay-4000"></div>
+        <section className="relative min-h-[78vh] flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_20%_20%,#FCEAEA,transparent_42%),radial-gradient(circle_at_80%_80%,#F3F4F6,transparent_38%)]">
+            <div className="absolute top-10 left-8 w-40 h-40 border border-[#F2CACA] rounded-full opacity-70"></div>
+            <div className="absolute bottom-12 right-10 w-56 h-56 border border-[#E5E7EB] rounded-full opacity-70"></div>
 
             <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-                <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight leading-tight">
-                    The Smartest Way to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">Ride on Campus</span>
+                <div className="inline-flex items-center px-4 py-1.5 mb-6 rounded-full border border-[#F2CACA] bg-[#FCEAEA] text-[#8B2E2E] text-xs font-semibold tracking-[0.12em] uppercase">
+                    Mae Fah Luang University
+                </div>
+                <h1 className="text-4xl md:text-6xl font-semibold mb-6 tracking-tight leading-tight text-[#2F2F2F]">
+                    Campus Bike Rental,
+                    <span className="block text-[#8B2E2E]">Simple and Reliable</span>
                 </h1>
-                <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-                    Experience seamless bike rentals with our campus-exclusive platform. Eco-friendly, affordable, and just a click away.
+                <p className="text-lg text-[#6B7280] mb-10 max-w-2xl mx-auto leading-relaxed">
+                    Find a bike, start your ride, and return it in minutes. Designed for daily student life with clear pricing and live location support.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     {isAuthenticated ? (
                         <Link to="/rider">
-                            <Button variant="primary" className="px-10 py-4 text-lg">
+                            <Button variant="primary" className="px-8 py-3 text-base font-medium">
                                 Go to Dashboard
                             </Button>
                         </Link>
                     ) : (
                         <>
                             <Link to="/register">
-                                <Button variant="primary" className="px-10 py-4 text-lg">
-                                    Join Now — It's Free
+                                <Button variant="primary" className="px-8 py-3 text-base font-medium">
+                                    Create Account
                                 </Button>
                             </Link>
                             <Link to="/login">
-                                <Button variant="outline" className="px-10 py-4 text-lg">
+                                <Button variant="outline" className="px-8 py-3 text-base font-medium">
                                     Log In
                                 </Button>
                             </Link>

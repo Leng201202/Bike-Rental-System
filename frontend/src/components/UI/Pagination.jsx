@@ -7,14 +7,14 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
     return (
-        <div className="flex items-center justify-between px-8 py-6 bg-black/10 border-t border-gray-700/50">
-            <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                Page <span className="text-white">{currentPage}</span> of <span className="text-white">{totalPages}</span>
+        <div className="flex items-center justify-between px-8 py-6 bg-[#F9FAFB] border-t border-[#E5E7EB]">
+            <div className="text-sm font-medium text-[#6B7280]">
+                Page <span className="text-[#2F2F2F] font-semibold">{currentPage}</span> of <span className="text-[#2F2F2F] font-semibold">{totalPages}</span>
             </div>
             <div className="flex gap-2">
                 <Button
                     variant="outline"
-                    className="px-4 py-2 text-[10px] uppercase font-black tracking-widest disabled:opacity-30"
+                    className="px-4 py-2 text-xs font-medium disabled:opacity-40"
                     onClick={() => onPageChange(currentPage - 1)}
                     disabled={currentPage === 1}
                 >
@@ -26,9 +26,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                         <button
                             key={page}
                             onClick={() => onPageChange(page)}
-                            className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all border ${currentPage === page
-                                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20'
-                                    : 'bg-transparent border-gray-700/50 text-gray-500 hover:text-white hover:border-gray-500'
+                            className={`w-8 h-8 rounded-md text-xs font-semibold transition-all border ${currentPage === page
+                                    ? 'bg-[#8B2E2E] border-[#8B2E2E] text-white'
+                                    : 'bg-white border-[#D1D5DB] text-[#6B7280] hover:text-[#8B2E2E] hover:border-[#8B2E2E]/50'
                                 }`}
                         >
                             {page}
@@ -38,7 +38,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
                 <Button
                     variant="outline"
-                    className="px-4 py-2 text-[10px] uppercase font-black tracking-widest disabled:opacity-30"
+                    className="px-4 py-2 text-xs font-medium disabled:opacity-40"
                     onClick={() => onPageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
                 >

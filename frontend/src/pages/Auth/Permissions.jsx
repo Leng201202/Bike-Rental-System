@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
-import { showToast } from '../../components/UI/PremiumToast';
+import { showToast } from '../../components/UI/toast';
 import PermissionAgreement from '../../components/Auth/PermissionAgreement';
 
 const Permissions = () => {
