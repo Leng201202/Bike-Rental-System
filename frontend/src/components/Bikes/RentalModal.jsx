@@ -110,6 +110,15 @@ const RentalModal = ({ isOpen, onClose, bike, onConfirm }) => {
         </div>
 
         <div className="mb-10">
+          <div className="mb-4 p-4 rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB]">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[#6B7280] mb-1">
+              Bike QR Code
+            </div>
+            <p className="text-xs text-[#4B5563] font-medium">
+              Print and attach this code as a QR label on the bike: <span className="font-semibold text-[#8B2E2E]">BIKE-{bike.id}</span>
+            </p>
+          </div>
+
           <div className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-[#6B7280]">
             Start Time
           </div>

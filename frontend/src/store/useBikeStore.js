@@ -25,6 +25,7 @@ const mapRentalToUi = (rental, bikeMap) => {
     status: rental.status,
     lat: bike?.location?.lat || 20.046,
     lng: bike?.location?.lng || 99.8943,
+    zone: bike?.location?.zone || "Unknown Zone",
     distanceKm: Number(rental.distanceKm ?? 0),
     durationSeconds: Number(rental.durationSeconds ?? 0),
     route: null,
@@ -101,6 +102,16 @@ const useBikeStore = create((set, get) => ({
         throw new Error("Please login as a rider first.");
       }
 
+      await get().syncUserRentals(userId);
+      const hasOpenRental = get().activeRentals.some(
+        (rental) => rental.status === "ACTIVE" || rental.status === "RESERVED",
+      );
+      if (hasOpenRental) {
+        const message = "You already have an active or reserved rental. Please end or cancel it before starting a new ride.";
+        set({ loading: false, error: message });
+        return { success: false, error: message, reason: "OPEN_RENTAL" };
+      }
+
       const rental = unwrapApiResponse(
         await api.post("/rentals/start", {
           userId,
@@ -126,11 +137,12 @@ const useBikeStore = create((set, get) => ({
       const createdRental = get().activeRentals.find((item) => item.id === rental.id);
       return { success: true, rental: createdRental || rental };
     } catch (error) {
+      const message = getApiErrorMessage(error, "Failed to rent bike");
       set({
-        error: getApiErrorMessage(error, "Failed to rent bike"),
+        error: message,
         loading: false,
       });
-      return { success: false };
+      return { success: false, error: message };
     }
   },
 
@@ -217,11 +229,12 @@ const useBikeStore = create((set, get) => ({
       });
       return { success: true, payment };
     } catch (error) {
+      const message = getApiErrorMessage(error, "Failed to return bike");
       set({
-        error: getApiErrorMessage(error, "Failed to return bike"),
+        error: message,
         loading: false,
       });
-      return { success: false };
+      return { success: false, error: message };
     }
   },
 

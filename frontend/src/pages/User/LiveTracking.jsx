@@ -299,6 +299,7 @@ const LiveTracking = () => {
           bikeImage: getBikeImageUrl(bike),
           lat: activeRental?.lat ?? bike.location?.lat,
           lng: activeRental?.lng ?? bike.location?.lng,
+          zone: activeRental?.zone || bike.location?.zone || "Unknown Zone",
           activeRental,
         };
       })
@@ -316,6 +317,7 @@ const LiveTracking = () => {
         bikeImage: getBikeImageUrl(rental),
         lat: rental.lat,
         lng: rental.lng,
+        zone: rental.zone || "Unknown Zone",
         activeRental: rental,
       });
     }
@@ -457,17 +459,23 @@ const LiveTracking = () => {
     };
   }, [selectedMapBike]);
 
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    mapBikes.forEach((bike) => {
-      console.log("Bike image:", bike.bikeImage, "Bike:", bike.bikeName);
-    });
-  }, [mapBikes]);
+  const currentZoneLabel = useMemo(() => {
+    const candidates = [
+      selectedMapBike?.zone,
+      selectedActiveBike?.zone,
+      nearestBikeData?.bike?.zone,
+    ];
+
+    const resolved = candidates.find(
+      (zone) => typeof zone === "string" && zone.trim().length > 0,
+    );
+    return resolved || "Unknown Zone";
+  }, [nearestBikeData, selectedActiveBike, selectedMapBike]);
 
   return (
-    <div className="min-h-[calc(100vh-73px)] h-[calc(100vh-73px)] flex flex-col md:flex-row bg-[#F3F4F6] overflow-hidden">
+    <div className="min-h-[calc(100vh-140px)] h-[calc(100vh-140px)] md:min-h-[calc(100vh-73px)] md:h-[calc(100vh-73px)] flex flex-col md:flex-row bg-[#F3F4F6] overflow-hidden">
       {/* Sidebar List */}
-      <div className="w-full md:w-80 border-r border-[#E5E7EB] bg-white p-6 flex flex-col z-20">
+      <div className="hidden md:flex w-full md:w-80 border-r border-[#E5E7EB] bg-white p-6 flex-col z-20">
         <div className="mb-10">
           <div className="text-[10px] font-bold uppercase text-[#8B2E2E] tracking-[0.24em] mb-2 flex items-center gap-2">
             <span className="w-2 h-2 bg-[#8B2E2E] rounded-full animate-pulse"></span>
@@ -559,6 +567,9 @@ const LiveTracking = () => {
                         </>
                       )}
                     </div>
+                    <p className="mt-1 text-[10px] font-medium text-[#6B7280] truncate">
+                      Zone: {bike.zone || "Unknown Zone"}
+                    </p>
                     {isNearestBike && (
                       <p className="mt-1 text-[10px] font-semibold text-[#8B2E2E] uppercase tracking-wide">
                         {formatDistance(nearestBikeData.distance)}
@@ -608,10 +619,10 @@ const LiveTracking = () => {
           className="w-full h-full"
           zoomControl={false}
         >
-          {/* Google Maps Tile Layer */}
+          {/* OpenStreetMap Tile Layer */}
           <TileLayer
-            url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
-            attribution="&copy; Google Maps"
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="&copy; OpenStreetMap contributors"
           />
 
           {/* Pre-Permission Blur Overlay */}
@@ -735,6 +746,9 @@ const LiveTracking = () => {
                           : "Last Known Location"
                         : statusLabel}
                     </div>
+                    <div className="mt-1 text-[9px] font-medium text-[#6B7280] uppercase tracking-wide">
+                      Zone: {bike.zone || "Unknown Zone"}
+                    </div>
                     {isNearestBike && (
                       <div className="mt-2 text-[9px] font-semibold uppercase tracking-wide text-[#8B2E2E]">
                         Nearest Bike
@@ -762,14 +776,63 @@ const LiveTracking = () => {
           )}
         </MapContainer>
 
+        {/* Mobile HUD */}
+        <div className="md:hidden absolute top-3 left-3 right-3 z-[1000]">
+          <div className="bg-white/95 p-3 rounded-xl border border-[#E5E7EB] shadow-sm">
+            <div className="text-[9px] font-semibold text-[#8B2E2E] uppercase tracking-[0.18em] mb-1">
+              MFU Campus
+            </div>
+            <div className="text-xs font-semibold text-[#2F2F2F] uppercase tracking-wide truncate">
+              {currentZoneLabel}
+            </div>
+            <div className="text-[10px] font-mono text-[#374151] mt-1">
+              {userLoc
+                ? `${userLoc.lat.toFixed(4)}, ${userLoc.lng.toFixed(4)}`
+                : `${selectedActiveBike?.lat?.toFixed(4) || "---"}, ${selectedActiveBike?.lng?.toFixed(4) || "---"}`}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Bike Picker */}
+        <div className="md:hidden absolute bottom-20 left-3 right-3 z-[1000]">
+          <div className="bg-white/95 border border-[#E5E7EB] rounded-xl shadow-sm p-2 overflow-x-auto no-scrollbar">
+            <div className="flex gap-2 min-w-max">
+              {mapBikes.map((bike) => {
+                const isSelected = selectedMapBike?.bikeId === bike.bikeId;
+                return (
+                  <button
+                    key={`mobile-${bike.id}`}
+                    onClick={() => {
+                      setSelectedMapBikeId(bike.bikeId);
+                      setSelectedBike(bike.activeRental || null);
+                    }}
+                    className={`min-w-[160px] text-left rounded-lg border p-2.5 ${
+                      isSelected
+                        ? "bg-[#FCEAEA] border-[#8B2E2E]/40"
+                        : "bg-white border-[#E5E7EB]"
+                    }`}
+                  >
+                    <div className="text-xs font-semibold text-[#2F2F2F] truncate">
+                      {bike.bikeName}
+                    </div>
+                    <div className="text-[10px] text-[#6B7280] mt-1 truncate">
+                      Zone: {bike.zone || "Unknown Zone"}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Map HUD Elements */}
-        <div className="absolute top-8 right-8 flex flex-col gap-4 z-[1000]">
+        <div className="hidden md:flex absolute top-8 right-8 flex-col gap-4 z-[1000]">
           <div className="bg-white/95 p-4 rounded-xl border border-[#E5E7EB] shadow-md">
             <div className="text-[9px] font-semibold text-[#8B2E2E] uppercase tracking-[0.18em] mb-1">
               MFU Campus
             </div>
             <div className="text-xs font-semibold text-[#2F2F2F] uppercase tracking-wide">
-              Main Plaza / Zone B
+              {currentZoneLabel}
             </div>
             <div className="text-xs font-mono text-[#374151] mt-2">
               LAT:{" "}
@@ -810,7 +873,7 @@ const LiveTracking = () => {
           )}
         </div>
 
-        <div className="absolute bottom-10 left-10 z-[1000] pointer-events-none">
+        <div className="hidden md:block absolute bottom-10 left-10 z-[1000] pointer-events-none">
           <div className="bg-white/95 border border-[#F2CACA] p-2 rounded-xl flex items-center gap-3 shadow-md">
             <div className="w-2.5 h-2.5 bg-[#8B2E2E] rounded-full animate-ping"></div>
             <span className="text-[10px] font-semibold text-[#8B2E2E] uppercase tracking-widest pr-2">

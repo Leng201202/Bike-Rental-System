@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useBikeStore from "../../store/useBikeStore";
 import Button from "../../components/UI/Button";
 import { showToast } from '../../components/UI/toast';
+import { requestPreciseLocation, verifyBikeCodeWithPrompt } from "../../utils/rideAccess";
 
 const getRideTrackStorageKey = (rentalId) => `ride-gps-track-${rentalId}`;
 
@@ -78,9 +79,29 @@ const ManageRentals = () => {
   };
 
   const handleStartRide = async (rental) => {
+    try {
+      await requestPreciseLocation();
+    } catch (error) {
+      showToast.error(error.message || "Please enable GPS before starting your ride.");
+      return;
+    }
+
+    const verification = verifyBikeCodeWithPrompt({
+      bikeId: rental.bikeId,
+      bikeName: rental.bikeName,
+    });
+
+    if (!verification.ok) {
+      if (verification.reason === "MISMATCH") {
+        showToast.error(`QR code does not match this bike. Expected ${verification.expected}.`);
+      }
+      return;
+    }
+
     const result = await activateReservation(rental.id);
     if (result?.success) {
       showToast.success(`${rental.bikeName} is now active. Have a safe ride.`);
+      navigate("/map");
       return;
     }
 

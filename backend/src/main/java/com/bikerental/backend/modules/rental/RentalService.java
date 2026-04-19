@@ -122,12 +122,17 @@ public class RentalService {
             endLng = finalPoint.lng();
         }
 
-        if (endLat != null && endLng != null) {
-            rental.setEndLat(endLat);
-            rental.setEndLng(endLng);
-            rental.getBike().setCurrentLat(endLat);
-            rental.getBike().setCurrentLng(endLng);
+        if (endLat == null || endLng == null) {
+            throw new DomainException(
+                "GPS_REQUIRED_TO_END_RENTAL",
+                "GPS is required to end ride and update bike location. Please enable location and try again."
+            );
         }
+
+        rental.setEndLat(endLat);
+        rental.setEndLng(endLng);
+        rental.getBike().setCurrentLat(endLat);
+        rental.getBike().setCurrentLng(endLng);
 
         BigDecimal totalCost = calculateCost(rental);
         rental.setTotalCost(totalCost);

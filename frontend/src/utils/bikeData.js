@@ -36,6 +36,6 @@ export const normalizeBike = (bike = {}) => ({
     ...(bike.location || {}),
     lat: Number(bike.location?.lat ?? bike.currentLat ?? bike.lat ?? 0),
     lng: Number(bike.location?.lng ?? bike.currentLng ?? bike.lng ?? 0),
-    zone: bike.location?.zone || bike.currentZone || bike.zone || "Campus",
+    zone: bike.location?.zone || bike.currentZone || bike.zone || "Unknown Zone",
   },
 });

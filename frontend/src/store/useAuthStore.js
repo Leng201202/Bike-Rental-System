@@ -47,50 +47,31 @@ const useAuthStore = create((set) => ({
     login: async (credentials) => {
         set({ loading: true, error: null });
         try {
-            const identifier = credentials.identifier || credentials.username || credentials.email || '';
-            const normalizedStudentId = String(credentials.studentId || identifier || '').trim();
-            const userLower = identifier.toLowerCase();
-            const role = userLower.includes('admin') ? 'ADMIN' : 'RIDER';
+            const auth = unwrapApiResponse(
+                await api.post('/auth/login', {
+                    identifier: credentials.identifier || credentials.username || credentials.email,
+                    password: credentials.password,
+                })
+            );
 
-            let user;
-            if (role === 'ADMIN') {
-                user = buildDisplayUser(null, {
-                    username: deriveUsernameFromIdentifier(identifier) || 'admin',
-                    fullName: 'System Administrator',
-                    email: identifier.includes('@') ? identifier : 'admin@bikerental.com',
-                    role: 'ADMIN',
-                    debt: 0,
-                });
-            } else {
-                const resolvedEmail = identifier.includes('@')
-                    ? identifier.toLowerCase()
-                    : `${deriveUsernameFromIdentifier(normalizedStudentId)}@uni.edu`;
-
-                const payload = {
-                    username: deriveUsernameFromIdentifier(normalizedStudentId),
-                    fullName: credentials.fullName || deriveUsernameFromIdentifier(identifier) || 'Campus Rider',
-                    email: resolvedEmail,
-                    phoneNumber: credentials.phoneNumber || '+66 81-234-5678',
-                    student_id: normalizedStudentId || credentials.campusId || '',
-                };
-                const backendUser = unwrapApiResponse(await api.post('/users/sync', payload));
-                user = buildDisplayUser(backendUser, { role: 'RIDER' });
+            const user = buildDisplayUser(auth?.user);
+            const token = auth?.token;
+            if (!token) {
+                throw new Error('Login failed: token was not returned');
             }
 
-            const mockToken = `mock-jwt-token-${role}`;
-
-            localStorage.setItem('token', mockToken);
+            localStorage.setItem('token', token);
             localStorage.setItem('auth_user', JSON.stringify(user));
             set({
                 user,
-                token: mockToken,
+                token,
                 isAuthenticated: true,
                 loading: false
             });
 
             useNotificationStore.getState().notify({
                 title: 'Welcome Back',
-                message: role === 'ADMIN' ? 'Admin session is ready.' : 'Your rider account is now active.',
+                message: user.role === 'ADMIN' ? 'Admin session is ready.' : 'Your rider account is now active.',
                 level: 'info',
             });
             return true;
@@ -158,13 +139,29 @@ const useAuthStore = create((set) => ({
         set({ loading: true, error: null });
         try {
             const payload = {
+                username: deriveUsernameFromIdentifier(userData.studentId || userData.email),
                 fullName: userData.fullName,
                 email: userData.email,
                 phoneNumber: userData.phoneNumber,
                 student_id: userData.studentId,
+                password: userData.password,
             };
-            unwrapApiResponse(await api.post('/users/sync', payload));
-            set({ loading: false });
+            const auth = unwrapApiResponse(await api.post('/auth/register', payload));
+            const user = buildDisplayUser(auth?.user);
+            const token = auth?.token;
+
+            if (!token) {
+                throw new Error('Registration failed: token was not returned');
+            }
+
+            localStorage.setItem('token', token);
+            localStorage.setItem('auth_user', JSON.stringify(user));
+            set({
+                loading: false,
+                user,
+                token,
+                isAuthenticated: true,
+            });
             return true;
         } catch (error) {
             set({

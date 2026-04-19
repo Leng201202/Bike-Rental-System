@@ -15,9 +15,6 @@ const SafeBikeImage = ({ bike, src, alt, className = "", ...props }) => {
       alt={alt || bike?.name || "Bike"}
       className={className}
       onError={(event) => {
-        if (import.meta.env.DEV) {
-          console.log("Bike image failed:", currentSrc);
-        }
         if (event.currentTarget.src.includes(FALLBACK_BIKE_IMAGE)) return;
         setCurrentSrc(FALLBACK_BIKE_IMAGE);
       }}

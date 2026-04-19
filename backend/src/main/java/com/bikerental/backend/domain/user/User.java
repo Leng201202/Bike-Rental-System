@@ -38,6 +38,9 @@ public class User {
     @Column(name = "student_id", length = 100)
     private String studentId;
 
+    @Column(name = "password_hash", length = 255)
+    private String passwordHash;
+
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "user_role")
@@ -110,6 +113,14 @@ public class User {
 
     public void setStudentId(String studentId) {
         this.studentId = studentId;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     // Temporary compatibility accessors for old naming.

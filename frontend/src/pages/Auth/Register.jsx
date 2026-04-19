@@ -32,13 +32,6 @@ function Register() {
 
         const success = await register(formData);
         if (success) {
-            useAuthStore.getState().login({
-                identifier: formData.studentId,
-                password: formData.password,
-                fullName: formData.fullName,
-                studentId: formData.studentId,
-                phoneNumber: formData.phoneNumber,
-            });
             showToast.success("Account created successfully!");
             navigate('/permissions');
         } else {

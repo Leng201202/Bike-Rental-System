@@ -4,6 +4,7 @@
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/common/exception/DomainException.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/common/exception/GlobalExceptionHandler.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/config/SecurityConfig.java
+/Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/config/TokenAuthenticationFilter.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/domain/audit/AuditLog.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/domain/audit/AuditLogRepository.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/domain/bike/Bike.java
@@ -34,6 +35,13 @@
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/audit/AuditLogController.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/audit/AuditLogDto.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/audit/AuditLogService.java
+/Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/auth/AuthController.java
+/Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/auth/AuthResponse.java
+/Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/auth/AuthService.java
+/Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/auth/AuthSession.java
+/Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/auth/AuthTokenStore.java
+/Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/auth/LoginRequest.java
+/Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/auth/RegisterRequest.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/bike/BikeController.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/bike/BikeDto.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/bike/BikeService.java
