@@ -98,7 +98,7 @@ const ManageRentals = () => {
       return;
     }
 
-    const result = await activateReservation(rental.id);
+    const result = await activateReservation(rental.id, verification.code);
     if (result?.success) {
       showToast.success(`${rental.bikeName} is now active. Have a safe ride.`);
       navigate("/map");
@@ -112,7 +112,7 @@ const ManageRentals = () => {
       return;
     }
 
-    showToast.error(`Unable to start reservation for ${rental.bikeName}.`);
+    showToast.error(result?.error || `Unable to start reservation for ${rental.bikeName}.`);
   };
 
   const handleCancelReservation = async (rental) => {

@@ -23,6 +23,8 @@ const mapRentalToUi = (rental, bikeMap) => {
     currentCost: Number(rental.totalCost ?? 0),
     method: rental.method,
     status: rental.status,
+    reservedAt: rental.reservedAt,
+    reservationEndsAt: rental.reservationEndsAt,
     lat: bike?.location?.lat || 20.046,
     lng: bike?.location?.lng || 99.8943,
     zone: bike?.location?.zone || "Unknown Zone",
@@ -146,18 +148,36 @@ const useBikeStore = create((set, get) => ({
     }
   },
 
-  activateReservation: async (rentalId) => {
+  activateReservation: async (rentalId, bikeCode) => {
     const reservation = get().activeRentals.find((rental) => rental.id === rentalId);
     if (!reservation || reservation.status !== "RESERVED") {
       return { success: false, reason: "NOT_FOUND" };
     }
 
-    set((state) => ({
-      activeRentals: state.activeRentals.map((rental) =>
-        rental.id === rentalId ? { ...rental, status: "ACTIVE", startTime: new Date().toISOString() } : rental,
-      ),
-    }));
-    return { success: true };
+    try {
+      const userId = getCurrentUserId();
+      if (!userId) {
+        throw new Error("Please login as a rider first.");
+      }
+
+      unwrapApiResponse(
+        await api.post(`/rentals/${rentalId}/activate`, {
+          bikeCode,
+        }),
+      );
+
+      await get().fetchBikes();
+      await get().syncUserRentals(userId);
+      return { success: true };
+    } catch (error) {
+      const message = getApiErrorMessage(error, "Unable to start reservation");
+      const normalized = String(message || "").toLowerCase();
+      return {
+        success: false,
+        reason: normalized.includes("expired") ? "EXPIRED" : "FAILED",
+        error: message,
+      };
+    }
   },
 
   cancelReservation: async (rentalId) => {

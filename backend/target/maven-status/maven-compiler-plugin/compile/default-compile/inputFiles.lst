@@ -55,6 +55,7 @@
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/payment/PaymentDto.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/payment/PaymentService.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/payment/UserBalanceDto.java
+/Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/rental/ActivateReservationRequest.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/rental/EndRentalRequest.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/rental/RentalController.java
 /Users/leng/Documents/GitHub/Bike-Rental-System/backend/src/main/java/com/bikerental/backend/modules/rental/RentalDto.java

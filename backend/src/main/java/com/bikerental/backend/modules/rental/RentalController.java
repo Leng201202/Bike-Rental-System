@@ -2,6 +2,7 @@ package com.bikerental.backend.modules.rental;
 
 import com.bikerental.backend.common.api.ApiResponse;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,8 +23,20 @@ public class RentalController {
     }
 
     @PostMapping("/start")
-    public ApiResponse<RentalDto> startRental(@Valid @RequestBody StartRentalRequest request) {
-        return ApiResponse.ok(RentalDto.from(rentalService.startRental(request)));
+    public ApiResponse<RentalDto> startRental(
+        Authentication authentication,
+        @Valid @RequestBody StartRentalRequest request
+    ) {
+        return ApiResponse.ok(RentalDto.from(rentalService.startRental(authentication.getName(), request)));
+    }
+
+    @PostMapping("/{rentalId}/activate")
+    public ApiResponse<RentalDto> activateReservation(
+        @PathVariable Long rentalId,
+        Authentication authentication,
+        @Valid @RequestBody ActivateReservationRequest request
+    ) {
+        return ApiResponse.ok(RentalDto.from(rentalService.activateReservation(rentalId, authentication.getName(), request)));
     }
 
     @PostMapping("/{rentalId}/end")

@@ -8,11 +8,14 @@ import com.bikerental.backend.domain.payment.DebtEntryType;
 import com.bikerental.backend.domain.payment.DebtLedgerEntry;
 import com.bikerental.backend.domain.payment.DebtLedgerRepository;
 import com.bikerental.backend.domain.rental.Rental;
+import com.bikerental.backend.domain.rental.RentalMethod;
 import com.bikerental.backend.domain.rental.RentalRepository;
 import com.bikerental.backend.domain.rental.RentalStatus;
+import com.bikerental.backend.domain.rental.RentalType;
 import com.bikerental.backend.domain.user.User;
 import com.bikerental.backend.domain.user.UserRepository;
 import com.bikerental.backend.modules.audit.AuditLogService;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +30,7 @@ import java.util.Objects;
 public class RentalService {
 
     private static final List<RentalStatus> OPEN_STATUSES = List.of(RentalStatus.RESERVED, RentalStatus.ACTIVE);
+    private static final long RESERVATION_MINUTES = 30;
     private static final double EARTH_RADIUS_KM = 6371.0088;
 
     private final RentalRepository rentalRepository;
@@ -50,10 +54,17 @@ public class RentalService {
     }
 
     @Transactional
-    public Rental startRental(StartRentalRequest request) {
-        User user = userRepository.findById(request.userId())
-            .orElseThrow(() -> new DomainException("USER_NOT_FOUND", "User not found: " + request.userId()));
-        Bike bike = bikeRepository.findById(request.bikeId())
+    public Rental startRental(String authenticatedUsername, StartRentalRequest request) {
+        User authenticatedUser = userRepository.findByUsernameIgnoreCase(authenticatedUsername)
+            .orElseThrow(() -> new DomainException("AUTH_USER_NOT_FOUND", "Authenticated user not found"));
+
+        if (!Objects.equals(authenticatedUser.getId(), request.userId())) {
+            throw new DomainException("USER_ID_MISMATCH", "You can only start rentals for your own account");
+        }
+
+        User user = userRepository.findByIdForUpdate(authenticatedUser.getId())
+            .orElseThrow(() -> new DomainException("USER_NOT_FOUND", "User not found: " + authenticatedUser.getId()));
+        Bike bike = bikeRepository.findByIdForUpdate(request.bikeId())
             .orElseThrow(() -> new DomainException("BIKE_NOT_FOUND", "Bike not found: " + request.bikeId()));
 
         if (bike.getStatus() != BikeStatus.AVAILABLE) {
@@ -75,22 +86,95 @@ public class RentalService {
         rental.setBike(bike);
         rental.setMethod(request.method());
         rental.setRentalType(request.rentalType());
-        rental.setStatus(RentalStatus.ACTIVE);
-        rental.setStartedAt(OffsetDateTime.now());
-        rental.setStartLat(bike.getCurrentLat());
-        rental.setStartLng(bike.getCurrentLng());
+        OffsetDateTime now = OffsetDateTime.now();
+        if (request.rentalType() == RentalType.RESERVE_30_MIN) {
+            rental.setStatus(RentalStatus.RESERVED);
+            rental.setReservedAt(now);
+            rental.setReservationEndsAt(now.plusMinutes(RESERVATION_MINUTES));
+            bike.setStatus(BikeStatus.RESERVED);
+        } else {
+            rental.setStatus(RentalStatus.ACTIVE);
+            rental.setStartedAt(now);
+            rental.setStartLat(bike.getCurrentLat());
+            rental.setStartLng(bike.getCurrentLng());
+            bike.setStatus(BikeStatus.RENTED);
+        }
+        Rental saved;
+        try {
+            saved = rentalRepository.saveAndFlush(rental);
+        } catch (DataIntegrityViolationException ex) {
+            String message = ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage()
+                : ex.getMessage();
+            String normalized = message == null ? "" : message.toLowerCase();
 
-        bike.setStatus(BikeStatus.RENTED);
-        Rental saved = rentalRepository.save(rental);
+            if (normalized.contains("uq_rentals_single_open_per_user")) {
+                throw new DomainException("USER_ALREADY_HAS_OPEN_RENTAL", "User already has an active or reserved rental");
+            }
+            if (normalized.contains("uq_rentals_single_open_per_bike")) {
+                throw new DomainException("BIKE_ALREADY_RENTED", "Bike already has an active or reserved rental");
+            }
+            throw new DomainException("RENTAL_CONFLICT", "Unable to start rental due to a concurrent update");
+        }
         auditLogService.log(
             user.getId(),
             "RENTAL_STARTED",
             "RENTAL",
             String.valueOf(saved.getId()),
-            "User started rental for bike " + bike.getId() + " using " + saved.getMethod().name()
+            saved.getStatus() == RentalStatus.RESERVED
+                ? "User reserved bike " + bike.getId() + " for 30 minutes"
+                : "User started rental for bike " + bike.getId() + " using " + saved.getMethod().name()
         );
 
         return saved;
+    }
+
+    @Transactional
+    public Rental activateReservation(Long rentalId, String authenticatedUsername, ActivateReservationRequest request) {
+        User authenticatedUser = userRepository.findByUsernameIgnoreCase(authenticatedUsername)
+            .orElseThrow(() -> new DomainException("AUTH_USER_NOT_FOUND", "Authenticated user not found"));
+
+        Rental rental = rentalRepository.findByIdForUpdate(rentalId)
+            .orElseThrow(() -> new DomainException("RENTAL_NOT_FOUND", "Rental not found: " + rentalId));
+
+        if (!Objects.equals(rental.getUser().getId(), authenticatedUser.getId())) {
+            throw new DomainException("RENTAL_FORBIDDEN", "You can only activate your own reservation");
+        }
+
+        if (rental.getStatus() == RentalStatus.ACTIVE) {
+            return rental;
+        }
+
+        if (rental.getStatus() != RentalStatus.RESERVED) {
+            throw new DomainException("RENTAL_NOT_RESERVED", "Rental is not in RESERVED status");
+        }
+
+        OffsetDateTime now = OffsetDateTime.now();
+        if (rental.getReservationEndsAt() != null && now.isAfter(rental.getReservationEndsAt())) {
+            throw new DomainException("RESERVATION_EXPIRED", "Reservation expired. Please reserve again.");
+        }
+
+        String expectedBikeCode = "BIKE-" + rental.getBike().getId();
+        if (!expectedBikeCode.equalsIgnoreCase(request.bikeCode().trim())) {
+            throw new DomainException("INVALID_BIKE_CODE", "Bike code does not match this reservation");
+        }
+
+        rental.setStatus(RentalStatus.ACTIVE);
+        rental.setStartedAt(now);
+        rental.setStartLat(rental.getBike().getCurrentLat());
+        rental.setStartLng(rental.getBike().getCurrentLng());
+        rental.setMethod(rental.getMethod() == null ? RentalMethod.HOURLY : rental.getMethod());
+        rental.getBike().setStatus(BikeStatus.RENTED);
+
+        auditLogService.log(
+            rental.getUser().getId(),
+            "RESERVATION_ACTIVATED",
+            "RENTAL",
+            String.valueOf(rental.getId()),
+            "Reserved ride activated for bike " + rental.getBike().getId()
+        );
+
+        return rental;
     }
 
     @Transactional

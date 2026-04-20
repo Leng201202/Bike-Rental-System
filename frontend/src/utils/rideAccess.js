@@ -49,5 +49,5 @@ export const verifyBikeCodeWithPrompt = ({ bikeId, bikeName }) => {
     return { ok: false, reason: "MISMATCH", expected };
   }
 
-  return { ok: true };
+  return { ok: true, code: entered.trim() };
 };

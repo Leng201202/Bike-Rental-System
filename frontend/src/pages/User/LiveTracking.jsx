@@ -326,7 +326,7 @@ const LiveTracking = () => {
   }, [bikes, trackableRentals]);
 
   const visibleMapBikes = useMemo(
-    () => mapBikes.filter((bike) => bike.status === "AVAILABLE"),
+    () => mapBikes,
     [mapBikes],
   );
 

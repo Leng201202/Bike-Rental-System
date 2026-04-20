@@ -10,7 +10,7 @@ import { requestPreciseLocation, verifyBikeCodeWithPrompt } from "../../utils/ri
 
 const BikesPage = ({ isCompact = false }) => {
   const navigate = useNavigate();
-  const { bikes, fetchBikes, rentBike, loading } = useBikeStore();
+  const { bikes, fetchBikes, rentBike, loading, activeRentals } = useBikeStore();
   const [filter, setFilter] = useState("ALL");
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState(isCompact ? "list" : "grid");
@@ -43,7 +43,16 @@ const BikesPage = ({ isCompact = false }) => {
     });
   }, [bikes, filter, query]);
 
+  const hasOpenRental = useMemo(
+    () => activeRentals.some((rental) => rental.status === "ACTIVE" || rental.status === "RESERVED"),
+    [activeRentals],
+  );
+
   const handleRentClick = (bike) => {
+    if (hasOpenRental) {
+      showToast.error("You already have an active or reserved rental. Please end it before renting another bike.");
+      return;
+    }
     setSelectedBike(bike);
     setModalSeed((prev) => prev + 1);
     setIsModalOpen(true);
@@ -51,6 +60,12 @@ const BikesPage = ({ isCompact = false }) => {
 
   const handleConfirmRental = async (method, rentalType) => {
     if (!selectedBike) return;
+
+    if (hasOpenRental) {
+      showToast.error("You already have an active or reserved rental. Please end it before renting another bike.");
+      setIsModalOpen(false);
+      return;
+    }
 
     if (rentalType !== "RESERVE_30_MIN") {
       try {

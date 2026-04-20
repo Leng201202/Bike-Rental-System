@@ -52,6 +52,12 @@ public class Rental {
     @Column(name = "rental_type", nullable = false, columnDefinition = "rental_type")
     private RentalType rentalType;
 
+    @Column(name = "reserved_at")
+    private OffsetDateTime reservedAt;
+
+    @Column(name = "reservation_ends_at")
+    private OffsetDateTime reservationEndsAt;
+
     @Column(name = "started_at")
     private OffsetDateTime startedAt;
 
@@ -147,6 +153,22 @@ public class Rental {
 
     public void setStartedAt(OffsetDateTime startedAt) {
         this.startedAt = startedAt;
+    }
+
+    public OffsetDateTime getReservedAt() {
+        return reservedAt;
+    }
+
+    public void setReservedAt(OffsetDateTime reservedAt) {
+        this.reservedAt = reservedAt;
+    }
+
+    public OffsetDateTime getReservationEndsAt() {
+        return reservationEndsAt;
+    }
+
+    public void setReservationEndsAt(OffsetDateTime reservationEndsAt) {
+        this.reservationEndsAt = reservationEndsAt;
     }
 
     public OffsetDateTime getEndedAt() {
