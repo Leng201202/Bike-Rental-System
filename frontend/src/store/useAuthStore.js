@@ -159,13 +159,14 @@ const useAuthStore = create((set) => ({
                 token,
                 isAuthenticated: true,
             });
-            return true;
+            return { success: true };
         } catch (error) {
+            const message = getApiErrorMessage(error, 'Registration failed');
             set({
-                error: getApiErrorMessage(error, 'Registration failed'),
+                error: message,
                 loading: false
             });
-            return false;
+            return { success: false, error: message };
         }
     },
 

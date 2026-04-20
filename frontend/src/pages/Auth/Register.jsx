@@ -30,12 +30,12 @@ function Register() {
             return;
         }
 
-        const success = await register(formData);
-        if (success) {
+        const result = await register(formData);
+        if (result?.success) {
             showToast.success("Account created successfully!");
             navigate('/permissions');
         } else {
-            showToast.error(error || "Registration failed.");
+            showToast.error(result?.error || error || "Registration failed.");
         }
     };
 
