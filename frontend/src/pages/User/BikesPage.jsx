@@ -98,7 +98,7 @@ const BikesPage = ({ isCompact = false }) => {
       const isReservation = result.rental?.status === "RESERVED";
       showToast.success(
         isReservation
-          ? `${selectedBike.name} reserved. Start ride from Rentals page when you arrive.`
+          ? `${selectedBike.name} booked for 30 minutes. Start ride from Rentals page when you arrive.`
           : `Started rental for ${selectedBike.name}!`,
       );
       setIsModalOpen(false);

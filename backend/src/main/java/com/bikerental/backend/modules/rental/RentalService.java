@@ -30,6 +30,7 @@ import java.util.Objects;
 public class RentalService {
 
     private static final List<RentalStatus> OPEN_STATUSES = List.of(RentalStatus.RESERVED, RentalStatus.ACTIVE);
+    private static final long RESERVATION_MINUTES = 30;
     private static final double EARTH_RADIUS_KM = 6371.0088;
 
     private final RentalRepository rentalRepository;
@@ -89,7 +90,7 @@ public class RentalService {
         if (request.rentalType() == RentalType.RESERVE_30_MIN) {
             rental.setStatus(RentalStatus.RESERVED);
             rental.setReservedAt(now);
-            rental.setReservationEndsAt(null);
+            rental.setReservationEndsAt(now.plusMinutes(RESERVATION_MINUTES));
             bike.setStatus(BikeStatus.RESERVED);
         } else {
             rental.setStatus(RentalStatus.ACTIVE);
@@ -171,6 +172,42 @@ public class RentalService {
             "RENTAL",
             String.valueOf(rental.getId()),
             "Reserved ride activated for bike " + rental.getBike().getId()
+        );
+
+        return rental;
+    }
+
+    @Transactional
+    public Rental cancelReservation(Long rentalId, String authenticatedUsername) {
+        User authenticatedUser = userRepository.findByUsernameIgnoreCase(authenticatedUsername)
+            .orElseThrow(() -> new DomainException("AUTH_USER_NOT_FOUND", "Authenticated user not found"));
+
+        Rental rental = rentalRepository.findByIdForUpdate(rentalId)
+            .orElseThrow(() -> new DomainException("RENTAL_NOT_FOUND", "Rental not found: " + rentalId));
+
+        if (!Objects.equals(rental.getUser().getId(), authenticatedUser.getId())) {
+            throw new DomainException("RENTAL_FORBIDDEN", "You can only cancel your own reservation");
+        }
+
+        boolean reservationCompatibleActive = rental.getStatus() == RentalStatus.ACTIVE
+            && rental.getRentalType() == RentalType.RESERVE_30_MIN
+            && rental.getEndedAt() == null
+            && (rental.getDurationSeconds() == null || rental.getDurationSeconds() == 0)
+            && (rental.getTotalCost() == null || rental.getTotalCost().compareTo(BigDecimal.ZERO) == 0);
+
+        if (rental.getStatus() != RentalStatus.RESERVED && !reservationCompatibleActive) {
+            throw new DomainException("RENTAL_NOT_RESERVED", "Only booked reservations can be cancelled");
+        }
+
+        rental.setStatus(RentalStatus.CANCELLED);
+        rental.getBike().setStatus(BikeStatus.AVAILABLE);
+
+        auditLogService.log(
+            rental.getUser().getId(),
+            "RESERVATION_CANCELLED",
+            "RENTAL",
+            String.valueOf(rental.getId()),
+            "Reservation cancelled for bike " + rental.getBike().getId()
         );
 
         return rental;

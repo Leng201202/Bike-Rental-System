@@ -22,6 +22,7 @@ const mapRentalToUi = (rental, bikeMap) => {
     startTime: rental.startedAt,
     currentCost: Number(rental.totalCost ?? 0),
     method: rental.method,
+    rentalType: rental.rentalType,
     status: rental.status,
     reservedAt: rental.reservedAt,
     reservationEndsAt: rental.reservationEndsAt,
@@ -131,7 +132,7 @@ const useBikeStore = create((set, get) => ({
         title: rentalType === "RESERVE_30_MIN" ? "Bike Reserved" : "Ride Started",
         message:
           rentalType === "RESERVE_30_MIN"
-            ? `Your bike is reserved. Start your ride from Rentals when you arrive.`
+            ? `Your bike is reserved for 30 minutes. Start your ride from Rentals when you arrive.`
             : `Your rental is active. Open Live Tracking to navigate.`,
         level: "success",
       });
@@ -150,7 +151,17 @@ const useBikeStore = create((set, get) => ({
 
   activateReservation: async (rentalId, bikeCode) => {
     const reservation = get().activeRentals.find((rental) => rental.id === rentalId);
-    if (!reservation || reservation.status !== "RESERVED") {
+    if (!reservation) {
+      return { success: false, reason: "NOT_FOUND" };
+    }
+
+    // Backward-compatibility path: old backend versions may mark booked rides as ACTIVE
+    // even when rentalType is RESERVE_30_MIN. Allow "Start Ride" UX to proceed.
+    if (reservation.status === "ACTIVE" && reservation.rentalType === "RESERVE_30_MIN") {
+      return { success: true, alreadyActive: true };
+    }
+
+    if (reservation.status !== "RESERVED") {
       return { success: false, reason: "NOT_FOUND" };
     }
 
@@ -182,18 +193,35 @@ const useBikeStore = create((set, get) => ({
 
   cancelReservation: async (rentalId) => {
     const reservation = get().activeRentals.find((rental) => rental.id === rentalId);
-    if (!reservation || reservation.status !== "RESERVED") {
+    if (!reservation) {
       return { success: false, reason: "NOT_FOUND" };
     }
 
-    set((state) => ({
-      activeRentals: state.activeRentals.filter((rental) => rental.id !== rentalId),
-      bikes: state.bikes.map((bike) =>
-        bike.id === reservation.bikeId ? { ...bike, status: "AVAILABLE" } : bike,
-      ),
-    }));
+    try {
+      const userId = getCurrentUserId();
+      if (!userId) {
+        throw new Error("Please login as a rider first.");
+      }
 
-    return { success: true };
+      unwrapApiResponse(await api.post(`/rentals/${rentalId}/cancel`));
+
+      await get().fetchBikes();
+      await get().syncUserRentals(userId);
+      return { success: true };
+    } catch (error) {
+      const message = getApiErrorMessage(error, "Unable to cancel reservation");
+      const normalized = String(message || "").toLowerCase();
+      const endpointMissing =
+        normalized.includes("no static resource") && normalized.includes("/cancel");
+
+      return {
+        success: false,
+        reason: endpointMissing ? "BACKEND_OUTDATED" : "FAILED",
+        error: endpointMissing
+          ? "Cancel reservation endpoint is missing on the backend deployment. Please redeploy the latest backend version."
+          : message,
+      };
+    }
   },
 
   returnBike: async (rentalId, paymentDetails, rideTelemetry = {}) => {

@@ -39,6 +39,14 @@ public class RentalController {
         return ApiResponse.ok(RentalDto.from(rentalService.activateReservation(rentalId, authentication.getName(), request)));
     }
 
+    @PostMapping("/{rentalId}/cancel")
+    public ApiResponse<RentalDto> cancelReservation(
+        @PathVariable Long rentalId,
+        Authentication authentication
+    ) {
+        return ApiResponse.ok(RentalDto.from(rentalService.cancelReservation(rentalId, authentication.getName())));
+    }
+
     @PostMapping("/{rentalId}/end")
     public ApiResponse<RentalDto> endRental(
         @PathVariable Long rentalId,

@@ -3,7 +3,7 @@ import Button from "../UI/Button";
 
 const RentalModal = ({ isOpen, onClose, bike, onConfirm }) => {
   const [selectedMethod, setSelectedMethod] = useState("HOURLY");
-  const [selectedTiming, setSelectedTiming] = useState("IMMEDIATE");
+  const [selectedTiming, setSelectedTiming] = useState("RESERVE_30_MIN");
 
   if (!isOpen || !bike) return null;
 
@@ -120,24 +120,9 @@ const RentalModal = ({ isOpen, onClose, bike, onConfirm }) => {
           </div>
 
           <div className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-[#6B7280]">
-            Start Time
+            Ride Start Option
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <button
-              onClick={() => setSelectedTiming("IMMEDIATE")}
-              className={`p-4 rounded-2xl border text-left transition-all duration-300 ${
-                selectedTiming === "IMMEDIATE"
-                  ? "bg-[#FCEAEA] border-[#8B2E2E] text-[#2F2F2F]"
-                  : "bg-[#F9FAFB] border-[#E5E7EB] text-[#4B5563] hover:border-[#D1D5DB]"
-              }`}
-            >
-              <div className="text-xs font-semibold uppercase tracking-widest">
-                Rent Now
-              </div>
-              <div className="text-[11px] mt-1 font-medium">
-                Start ride immediately after confirming.
-              </div>
-            </button>
             <button
               onClick={() => setSelectedTiming("RESERVE_30_MIN")}
               className={`p-4 rounded-2xl border text-left transition-all duration-300 ${
@@ -147,13 +132,34 @@ const RentalModal = ({ isOpen, onClose, bike, onConfirm }) => {
               }`}
             >
               <div className="text-xs font-semibold uppercase tracking-widest">
-                Reserve and Start Later
+                Book Bike (Start Later)
               </div>
               <div className="text-[11px] mt-1 font-medium">
-                Hold this bike now, then start your ride from Rentals when you arrive.
+                Reserve for 30 minutes. Start from Rentals page when you arrive.
+              </div>
+            </button>
+            <button
+              onClick={() => setSelectedTiming("IMMEDIATE")}
+              className={`p-4 rounded-2xl border text-left transition-all duration-300 ${
+                selectedTiming === "IMMEDIATE"
+                  ? "bg-[#FCEAEA] border-[#8B2E2E] text-[#2F2F2F]"
+                  : "bg-[#F9FAFB] border-[#E5E7EB] text-[#4B5563] hover:border-[#D1D5DB]"
+              }`}
+            >
+              <div className="text-xs font-semibold uppercase tracking-widest">
+                Start Ride Now
+              </div>
+              <div className="text-[11px] mt-1 font-medium">
+                Begins ride instantly after confirming.
               </div>
             </button>
           </div>
+
+          {selectedTiming === "RESERVE_30_MIN" && (
+            <p className="mt-3 text-xs font-semibold text-amber-700">
+              Booking does not start the ride. Use the Start Ride button in Rentals page.
+            </p>
+          )}
         </div>
 
         <div className="flex gap-4">
