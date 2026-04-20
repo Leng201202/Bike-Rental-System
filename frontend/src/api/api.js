@@ -1,7 +1,30 @@
 import axios from 'axios';
 
+const resolveBaseURL = () => {
+    const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim();
+
+    if (typeof window !== 'undefined') {
+        const runningOnRender = window.location.hostname.endsWith('.onrender.com');
+        // In production Render deployments, force same-origin API calls to avoid
+        // cross-origin redirects and dropped Authorization headers.
+        if (runningOnRender) {
+            return '/api';
+        }
+    }
+
+    if (configured) {
+        return configured;
+    }
+
+    if (typeof window !== 'undefined') {
+        return '/api';
+    }
+
+    return 'http://localhost:8080/api';
+};
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+    baseURL: resolveBaseURL(),
     headers: {
         'Content-Type': 'application/json',
     },
@@ -28,7 +51,7 @@ api.interceptors.response.use(
         const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
         const hasToken = !!localStorage.getItem('token');
 
-        if ((status === 401 || status === 403) && hasToken && !isAuthEndpoint) {
+        if (status === 401 && hasToken && !isAuthEndpoint) {
             localStorage.removeItem('token');
             localStorage.removeItem('auth_user');
             localStorage.removeItem('hasAgreedToTerms');
