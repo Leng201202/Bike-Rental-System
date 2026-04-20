@@ -103,7 +103,7 @@ const BikeCard = ({ bike, onRent, isOwner = false, layout = "card" }) => {
             {bike.status === "AVAILABLE"
               ? "Rent This Bike"
               : bike.status === "RESERVED"
-                ? "Reserved (30 Min Hold)"
+                ? "Reserved (Start Later)"
                 : bike.status.replace("_", " ")}
           </Button>
         )}

@@ -147,10 +147,10 @@ const RentalModal = ({ isOpen, onClose, bike, onConfirm }) => {
               }`}
             >
               <div className="text-xs font-semibold uppercase tracking-widest">
-                Reserve 30 Minutes
+                Reserve and Start Later
               </div>
               <div className="text-[11px] mt-1 font-medium">
-                Bike is held for 30 minutes and auto-cancels if not started.
+                Hold this bike now, then start your ride from Rentals when you arrive.
               </div>
             </button>
           </div>

@@ -141,13 +141,6 @@ const ManageRentals = () => {
     return tracked || "0.00";
   };
 
-  const getRemainingSeconds = (reservationEndsAt) => {
-    return Math.max(
-      0,
-      Math.floor((new Date(reservationEndsAt).getTime() - currentTime) / 1000),
-    );
-  };
-
   const activeRides = activeRentals.filter(
     (rental) => rental.status === "ACTIVE",
   );
@@ -243,11 +236,6 @@ const ManageRentals = () => {
             })}
 
             {reservedRides.map((rental) => {
-              const remainingSeconds = getRemainingSeconds(
-                rental.reservationEndsAt,
-              );
-              const remainingTime = formatDuration(remainingSeconds);
-
               return (
                 <div
                   key={rental.id}
@@ -270,17 +258,17 @@ const ManageRentals = () => {
                       </div>
 
                       <p className="text-xs text-amber-100/80 font-bold mb-5">
-                        This bike is reserved for you for 30 minutes. Start your
-                        ride before the timer reaches 00:00.
+                        This bike is reserved for you. Start your ride when you
+                        arrive at the bike.
                       </p>
 
                       <div className="grid grid-cols-2 gap-4 mt-2 max-w-sm">
                         <div className="bg-black/40 border border-white/10 p-4 rounded-2xl flex flex-col items-center justify-center">
                           <span className="text-[10px] text-gray-400 uppercase tracking-widest font-black mb-1">
-                            Time Left
+                            Reservation
                           </span>
-                          <span className="text-2xl font-mono text-white font-bold tracking-tighter">
-                            {remainingTime}
+                          <span className="text-lg font-mono text-white font-bold tracking-tighter">
+                            READY
                           </span>
                         </div>
 
@@ -298,12 +286,9 @@ const ManageRentals = () => {
                     <div className="text-right mt-4 md:mt-0 flex flex-col gap-3 w-full md:w-auto">
                       <Button
                         onClick={() => handleStartRide(rental)}
-                        disabled={remainingSeconds <= 0}
                         className="px-8 py-4 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-green-500 transition-all active:scale-95 shadow-xl shadow-green-600/20"
                       >
-                        {remainingSeconds > 0
-                          ? "Start Ride"
-                          : "Reservation Expiring"}
+                        Start Ride
                       </Button>
                       <Button
                         onClick={() => handleCancelReservation(rental)}

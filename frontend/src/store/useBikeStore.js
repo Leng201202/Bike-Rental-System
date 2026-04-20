@@ -131,7 +131,7 @@ const useBikeStore = create((set, get) => ({
         title: rentalType === "RESERVE_30_MIN" ? "Bike Reserved" : "Ride Started",
         message:
           rentalType === "RESERVE_30_MIN"
-            ? `Your bike has been reserved for 30 minutes.`
+            ? `Your bike is reserved. Start your ride from Rentals when you arrive.`
             : `Your rental is active. Open Live Tracking to navigate.`,
         level: "success",
       });

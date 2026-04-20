@@ -48,6 +48,11 @@ const BikesPage = ({ isCompact = false }) => {
     [activeRentals],
   );
 
+  const reservedRentals = useMemo(
+    () => activeRentals.filter((rental) => rental.status === "RESERVED"),
+    [activeRentals],
+  );
+
   const handleRentClick = (bike) => {
     if (hasOpenRental) {
       showToast.error("You already have an active or reserved rental. Please end it before renting another bike.");
@@ -93,11 +98,13 @@ const BikesPage = ({ isCompact = false }) => {
       const isReservation = result.rental?.status === "RESERVED";
       showToast.success(
         isReservation
-          ? `${selectedBike.name} reserved for 30 minutes. Start ride before it expires.`
+          ? `${selectedBike.name} reserved. Start ride from Rentals page when you arrive.`
           : `Started rental for ${selectedBike.name}!`,
       );
       setIsModalOpen(false);
-      if (!isReservation) {
+      if (isReservation) {
+        navigate("/rider?tab=manage");
+      } else {
         navigate("/map");
       }
     } else {
@@ -162,6 +169,23 @@ const BikesPage = ({ isCompact = false }) => {
           </div>
         </div>
       </div>
+
+      {reservedRentals.length > 0 && (
+        <div className="mb-8 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-4 md:px-6 md:py-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <p className="text-sm font-semibold text-amber-900">
+              You have {reservedRentals.length} reserved bike{reservedRentals.length > 1 ? "s" : ""}. Press Start Ride from Rentals when you arrive at the bike.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/rider?tab=manage")}
+              className="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-amber-700 transition-colors"
+            >
+              Open Rentals
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-center">

@@ -30,7 +30,6 @@ import java.util.Objects;
 public class RentalService {
 
     private static final List<RentalStatus> OPEN_STATUSES = List.of(RentalStatus.RESERVED, RentalStatus.ACTIVE);
-    private static final long RESERVATION_MINUTES = 30;
     private static final double EARTH_RADIUS_KM = 6371.0088;
 
     private final RentalRepository rentalRepository;
@@ -90,7 +89,7 @@ public class RentalService {
         if (request.rentalType() == RentalType.RESERVE_30_MIN) {
             rental.setStatus(RentalStatus.RESERVED);
             rental.setReservedAt(now);
-            rental.setReservationEndsAt(now.plusMinutes(RESERVATION_MINUTES));
+            rental.setReservationEndsAt(null);
             bike.setStatus(BikeStatus.RESERVED);
         } else {
             rental.setStatus(RentalStatus.ACTIVE);
